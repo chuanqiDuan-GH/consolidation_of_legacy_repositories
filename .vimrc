@@ -1,6 +1,10 @@
 "09-24-2016 create by chuanqiDuan
 "注：配置文件中，以单个双引号开头的文字为注释
 
+
+"----------------------------------------------
+" < 基本设置 >
+"----------------------------------------------
 "(自动)缩进使用4个空格
 set shiftwidth=4
 
@@ -50,7 +54,9 @@ endif
 
 
 
-"-------------------状态行设置------------------
+"----------------------------------------------
+" < 状态行设置 >
+"----------------------------------------------
 "标尺，用于显示光标位置的行号和列号，逗号分隔。每个窗口都有自己的标尺。如果窗口有状态行，标尺在那里显示。否则，它显示在屏幕的最后一行上
 "set ruler
 
@@ -59,7 +65,9 @@ endif
 
 
 
-"-------------------命令行设置-----------------
+"----------------------------------------------
+" < 命令行设置 >
+"----------------------------------------------
 "命令行显示输入的命令
 "set showcmd
 
@@ -68,10 +76,132 @@ endif
 
 
 
-"-------------------搜索设置-------------------
+"----------------------------------------------
+" < 搜索设置 >
+"----------------------------------------------
 "高亮搜索
 set hlsearch
 
 "输入字符串就先是匹配点
 "set incsearch
 
+
+
+"----------------------------------------------
+" < catgs setting >
+"----------------------------------------------
+" 按下F9重新生成tag文件，并更新taglist
+map <F9> :!ctags -R --c++-kinds=+p --fields=+iaS --extra=+q .<CR><CR> :TlistUpdate<CR>
+imap <F9> <ESC>:!ctags -R --c++-kinds=+p --fields=+iaS --extra=+q .<CR><CR> :TlistUpdate<CR>
+
+"add current directory's generated tags file
+set tags=tags
+"表示在当前工作目录下搜索tags文件
+"set tags+=/mnt/hgfs/cqd/linux_header/tags
+
+ "add new tags file(刚刚生成tags的路径，在ctags -R 生成tags文件后，不要将tags移动到别的目录，否则ctrl+］时，会提示找不到源码文件)
+set tags+=./tagsset tags+=/mnt/hgfs/cqd/linux_header/tags
+
+"tags表示在搜寻tags文件的时候，也要搜寻/mnt/hgfs/cqd/linux_header/文件夹下的tags文件。然后保存并退出vi。这样，你就可以用vim在任意地方查看有关Linux的函数原形
+set tags+=/mnt/hgfs/cqd/linux_header/tags
+
+
+
+"----------------------------------------------
+" < taglist setting >
+"----------------------------------------------
+"F4映射taglist快捷键
+nmap <F4> :Tlist<CR>
+
+"因为我们放在环境变量里，所以可以直接执行
+let Tlist_Ctags_Cmd='ctags' 
+
+"让窗口显示在右边，0的话就是显示在左边
+let Tlist_Use_Right_Window=0 
+
+"让taglist可以同时展示多个文件的函数列表
+let Tlist_Show_One_File=0 
+
+"非当前文件，函数列表折叠隐藏
+let Tlist_File_Fold_Auto_Close=1 
+
+"当taglist是最后一个分割窗口时，自动退出vim
+let Tlist_Exit_OnlyWindow=1 
+
+"是否一直处理tags.1:处理;0:不处理
+let Tlist_Process_File_Always=1 
+
+"实时更新tags
+let Tlist_Inc_Winwidth=0
+
+
+
+"----------------------------------------------
+" < cscope setting >
+"----------------------------------------------
+if has("cscope")
+" 指定用来执行cscope的命令
+set csprg=/usr/bin/cscope 
+" 设置cstag命令查找次序：0先找cscope数据库再找标签文件；1先找标签文件再找cscope数据库
+set csto=0 
+" 同时搜索cscope数据库和标签文件
+set cst 
+" 使用QuickFix窗口来显示cscope查找结果
+set cscopequickfix=s-,c-,d-,i-,t-,e- 
+set nocsverb
+" 若当前目录下存在cscope数据库，添加该数据库到vim
+if filereadable("cscope.out") 
+cs add cscope.out
+" 否则只要环境变量CSCOPE_DB不为空，则添加其指定的数据库到vim
+elseif $CSCOPE_DB != "" 
+cs add $CSCOPE_DB
+endif
+set csverb
+endif
+
+map <F10> :cs add ./cscope.out .<CR><CR><CR> :cs reset<CR>
+imap <F10> <ESC>:cs add ./cscope.out .<CR><CR><CR> :cs reset<CR>
+" 将:cs find c等Cscope查找命令映射为<C-_>c等快捷键（按法是先按Ctrl+Shift+-, 然后很快再按下c）
+nmap <C-_>s :cs find s <C-R>=expand("<cword>")<CR><CR> :copen<CR><CR>
+nmap <C-_>g :cs find g <C-R>=expand("<cword>")<CR><CR>
+nmap <C-_>d :cs find d <C-R>=expand("<cword>")<CR><CR> :copen<CR><CR>
+nmap <C-_>c :cs find c <C-R>=expand("<cword>")<CR><CR> :copen<CR><CR>
+nmap <C-_>t :cs find t <C-R>=expand("<cword>")<CR><CR> :copen<CR><CR>
+nmap <C-_>e :cs find e <C-R>=expand("<cword>")<CR><CR> :copen<CR><CR>
+nmap <C-_>f :cs find f <C-R>=expand("<cfile>")<CR><CR>
+nmap <C-_>i :cs find i <C-R>=expand("<cfile>")<CR><CR> :copen<CR><CR>
+
+
+
+" -----------------------------------------------------------------------------
+"  < 自动补齐>
+" -----------------------------------------------------------------------------
+"inoremap ( ()<ESC>i
+"inoremap [ []<ESC>i
+"inoremap { {}<ESC>i<Enter><ESC><s-o>
+"inoremap ' ''<ESC>i
+"inoremap " ""<ESC>i
+"inoremap < <><ESC>i
+":inoremap ) <c-r>=ClosePair(')')<CR>
+":inoremap } <c-r>=ClosePair('}')<CR>
+":inoremap ] <c-r>=ClosePair(']')<CR>
+":inoremap ' <c-r>=ClosePair(''')<CR>
+"这一行是双引号的自动补齐
+":inoremap " <c-r>=ClosePair('"')<CR>
+"func! ClosePair(char)
+"    if getline('.')[col('.') -1] == a:char
+"        return "\<Right>"
+"    else
+"        return a:char
+"    endif
+"endf
+"cnoremap <expr> %% getcmdtype() == ':' ? expand('%:h').'/' : '%%'
+
+
+" -----------------------------------------------------------------------------
+"  < WinManager setting >
+" -----------------------------------------------------------------------------
+" 设置我们要管理的插件
+let g:winManagerWindowLayout='FileExplorer|TagList' 
+"let g:persistentBehaviour=0 " 如果所有编辑文件都关闭了，退出vim
+nmap <F5> :WMToggle<cr>
