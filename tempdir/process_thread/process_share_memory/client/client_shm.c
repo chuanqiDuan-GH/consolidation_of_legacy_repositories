@@ -13,7 +13,7 @@ int main()
 	return -1;
     }
 
-    /*创建信号量之后的，初始化操作*/        
+    //创建信号量之后的，初始化操作        
     if(set_semvalue(semid))
     {
 	printf("%s : set_semvalue failed!\n",__func__);
@@ -24,7 +24,7 @@ int main()
     //创建共享内存
     //shmget
     int shmid;
-    int key = ftok("/tmp/keyfile", IPCKEY);
+    int key = ftok(FTOK_FILE, IPCKEY);
     if(-1 == (shmid = shmget(key, SM_SIZE, OPEN_MODE|IPC_EXCL)))
 	//if(-1 == (shmid = shmget(MYSHMKEY, SM_SIZE, 0777)))
     {
@@ -54,7 +54,7 @@ sleep(5);
 
     }
 
-    //删除信号两键值
+    //删除信号量键值
     if(del_sem(semid))
     {
 	printf("%s : del_sem failed!\n", __func__);

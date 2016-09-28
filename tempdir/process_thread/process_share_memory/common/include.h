@@ -14,11 +14,13 @@ union semun
     unsigned short *array;
 };
 
+#if 0
 typedef struct _tag_shm
 {
     char buf[SHM_SIZE];
     unsigned short num;
 }shm_t;
+#endif
 
 int creat_sem(void);
 int set_semvalue(int semid);

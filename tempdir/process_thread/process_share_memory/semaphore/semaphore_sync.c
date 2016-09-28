@@ -4,13 +4,13 @@
 #include <sys/sem.h>
 #include "../common/include.h"
 
-//1）创建信号量
+//创建信号量
 int creat_sem(void)
 {
     int semid = 0;
     key_t key;
 
-    key = ftok("/tmp/keyfile", 11);
+    key = ftok(FTOK_FILE, IPCKEY);
     if(key == -1)
     {
 	printf("%s : key = -1!\n",__func__);
@@ -28,7 +28,7 @@ int creat_sem(void)
 
 }
 
-//2）初始化信号量。在使用之前必须先初始化
+//初始化信号量。在使用之前必须先初始化
 int set_semvalue(int semid)
 {
     union semun sem_arg;
@@ -42,7 +42,7 @@ int set_semvalue(int semid)
     return 0;
 }
 
-//3）占用资源，即执行p操作（p操作是用于描述获取信号量的术语）
+//占用资源，p操作
 int sem_p(int semid)
 {
     struct sembuf sem_arg;
@@ -58,7 +58,7 @@ int sem_p(int semid)
     return 0;
 }
 
-//4）释放资源，即v操作（v操作适用于描述释放信号量的术语）
+//释放资源，v操作
 int sem_v(int semid)
 {
     struct sembuf sem_arg;
@@ -74,7 +74,7 @@ int sem_v(int semid)
     return 0;
 }
 
-//5）删除信号量。
+//删除信号量。
 int del_sem(int semid)
 {
     if(semctl(semid, 0, IPC_RMID) == -1)
