@@ -3,14 +3,20 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+
 
 #define SD_SIZE 16
-#define RC_SIZE 16
+#define RC_SIZE 4096
 
 int main(int argc, char *argv[])
 {
     int sd_fd;
+    int dst_fd;
     int c_ret;
+    int wr_ret;
     ssize_t s_ret;
     ssize_t r_ret;
     struct sockaddr_in sd_addr; 
@@ -54,7 +60,22 @@ int main(int argc, char *argv[])
 	printf("recv failed!\n"); 
 	return -1;
     }
-    printf("rc_buf:%s\n", rc_buf);
+
+    //接收download的文件
+    dst_fd = open("./recvFile", O_WRONLY | O_CREAT | O_TRUNC, 0666);
+    if(dst_fd < 0)
+    {
+	printf("open source failed.\n");
+	return -1; 
+    }
+
+    wr_ret = write(dst_fd, rc_buf, RC_SIZE);
+    if(-1 == wr_ret)
+    {
+	printf("write file failed.\n");	
+	return -1;
+    }
+    //printf("rc_buf:%s\n", rc_buf);
 
     return 0;
 }

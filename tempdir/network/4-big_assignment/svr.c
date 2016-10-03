@@ -5,27 +5,36 @@
 #include <string.h>
 #include <dirent.h>
 #include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 #define RC_SIZE 16
-#define SD_SIZE 16
+#define SD_SIZE 4096
+#define RD_SIZE 4096
+
 typedef struct stat Stat;
 
 int CheckFilename(char *filename);
 
 int main()
 {
-    int sr_fd;
-    int cl_fd;
-    int b_ret;
-    int l_ret;
-    int s_ret;
-    int r_ret;
+    int sr_fd;	//server
+    int cl_fd;	//client
+    int b_ret;	//bind
+    int l_ret;	//listen
+    int s_ret;	//send
+    int r_ret;	//recv
+    int cf_ret;	//check file
+    int so_fd; //source
+    ssize_t rd_ret; //read
+
     struct sockaddr_in sr_addr;
     struct sockaddr_in cl_addr;
     int s_len = sizeof(struct sockaddr_in);
     int c_len = sizeof(struct sockaddr_in);
     char rc_buf[RC_SIZE] = "";
     char sd_buf[SD_SIZE] = "";
+    char rd_buf[RD_SIZE] = "";
 
     //zeor setting
     bzero(&sr_addr, s_len);
@@ -79,12 +88,33 @@ int main()
 	}
 
 	//检查文件是否存在
-	CheckFilename(rc_buf);
+	int cf_ret = CheckFilename(rc_buf);
+	if(-1 == cf_ret)
+	{
+	    printf("file not exist.\n");	
+	    return -1;
+	}
+	//printf("rc_buf:%s\n", rc_buf);
 
-	printf("rc_buf:%s\n", rc_buf);
+	//从原始文件中读取数据
+	so_fd = open(rc_buf, O_RDONLY, 0666);
+	if(so_fd < 0)
+	{
+	    printf("open source failed.\n");
+	    return -1; 
+	}
+
+	rd_ret = read(so_fd, rd_buf, RD_SIZE);
+	if(-1 == rd_ret)
+	{
+	    printf("read file failed.\n");	
+	    return -1;
+	}
+	//printf("rd_buf:%s\n", rd_buf);
 
 	//send
-	strcpy(sd_buf, rc_buf);
+	strcpy(sd_buf, rd_buf);
+	//printf("sd_buf:%s\n", sd_buf);
 	s_ret = send(cl_fd, sd_buf, SD_SIZE, 0);
 	if(-1 == s_ret)
 	{
@@ -121,7 +151,6 @@ int CheckFilename(char *filename)
 	}
     }
 
-    printf("file not exist.\n"); 
     return -1; 
 }
 
