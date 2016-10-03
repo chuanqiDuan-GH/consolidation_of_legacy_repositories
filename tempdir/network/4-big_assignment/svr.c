@@ -14,18 +14,18 @@
 
 typedef struct stat Stat;
 
-int CheckFilename(char *filename);
+int FilePropertiesView(char *filename);
 
 int main()
 {
     int sr_fd;	//server
     int cl_fd;	//client
+    int so_fd; //source
     int b_ret;	//bind
     int l_ret;	//listen
-    int s_ret;	//send
-    int r_ret;	//recv
-    int cf_ret;	//check file
-    int so_fd; //source
+    int f_size;	//file size
+    ssize_t s_ret;  //send
+    ssize_t r_ret;  //recv
     ssize_t rd_ret; //read
 
     struct sockaddr_in sr_addr;
@@ -78,7 +78,7 @@ int main()
 	    printf("accept failed!\n");	
 	    return -1;
 	}
-
+#if 1	//这部分之后要放到并发调用函数中
 	//recv
 	r_ret = recv(cl_fd, rc_buf, RC_SIZE, 0); 
 	if(-1 == r_ret)
@@ -88,13 +88,17 @@ int main()
 	}
 
 	//检查文件是否存在
-	int cf_ret = CheckFilename(rc_buf);
-	if(-1 == cf_ret)
+	f_size = FilePropertiesView(rc_buf);
+	if(-1 == f_size)
 	{
 	    printf("file not exist.\n");	
-	    return -1;
+	    send(cl_fd , "file not exist", SD_SIZE, 0);
+	    continue;
 	}
-	//printf("rc_buf:%s\n", rc_buf);
+	printf("%d\n", f_size);
+
+	//获得原始文件的大小
+	
 
 	//从原始文件中读取数据
 	so_fd = open(rc_buf, O_RDONLY, 0666);
@@ -112,21 +116,20 @@ int main()
 	}
 	//printf("rd_buf:%s\n", rd_buf);
 
-	//send
+	//将读到的数据拷贝并发送给client
 	strcpy(sd_buf, rd_buf);
-	//printf("sd_buf:%s\n", sd_buf);
 	s_ret = send(cl_fd, sd_buf, SD_SIZE, 0);
 	if(-1 == s_ret)
 	{
 	    printf("send filename failed!\n"); 
 	    return -1;
 	}
+#endif
     }
-
     return 0;
 }
 
-int CheckFilename(char *filename)
+int FilePropertiesView(char *filename)
 {
     DIR *dir = opendir(".");
     if(!dir)
@@ -135,22 +138,22 @@ int CheckFilename(char *filename)
 	return; 
     }
 
-    //Stat *file_info = (Stat*)malloc(sizeof(Stat));
     Stat *file_info;
     struct dirent *rf = NULL;
 
     memset(file_info, 0, sizeof(stat));
-    //printf("%s\n", filename);
+    printf("%s\n", filename);
     while(rf = readdir(dir))
     {
-	//printf("%s\n", rf->d_name);
-	if(!strcmp(filename, rf->d_name))
+	//使用stat函数将文件名和结构体关联
+	stat(rf->d_name, file_info);
+
+	//当前文件夹中是否存在客户端指定的文件，并判断是否为常规文件
+	if((!strcmp(filename, rf->d_name))  && S_ISREG(file_info->st_mode))
 	{
 	    printf("file %s exist.\n", filename);	
-	    return 0;
+	    return (int)file_info->st_size;
 	}
     }
-
     return -1; 
 }
-

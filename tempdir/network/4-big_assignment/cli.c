@@ -7,18 +7,18 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-
 #define SD_SIZE 16
 #define RC_SIZE 4096
 
 int main(int argc, char *argv[])
 {
-    int sd_fd;
-    int dst_fd;
-    int c_ret;
-    int wr_ret;
-    ssize_t s_ret;
-    ssize_t r_ret;
+    int sd_fd;	//send
+    int dst_fd;	//destnation
+    int c_ret;	//connect
+    int wr_ret;	//write
+    ssize_t s_ret;  //send
+    ssize_t r_ret;  //recv
+
     struct sockaddr_in sd_addr; 
     int sd_len = sizeof(struct sockaddr_in);
     char sd_buf[SD_SIZE] = "";
@@ -54,10 +54,18 @@ int main(int argc, char *argv[])
 	return -1;
     }
 
+    //recv data
     r_ret = recv(sd_fd, rc_buf, RC_SIZE, 0); 
     if(-1 == r_ret)
     {
 	printf("recv failed!\n"); 
+	return -1;
+    }
+    
+    //文件不存在返回处理
+    if(!strcmp("file net exist", rc_buf))
+    {
+	printf("%s\n", rc_buf);
 	return -1;
     }
 
@@ -69,6 +77,7 @@ int main(int argc, char *argv[])
 	return -1; 
     }
 
+    //write data
     wr_ret = write(dst_fd, rc_buf, RC_SIZE);
     if(-1 == wr_ret)
     {
