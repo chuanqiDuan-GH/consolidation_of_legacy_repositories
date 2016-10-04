@@ -6,9 +6,16 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+//#include "common.h"
 
 #define SD_SIZE 16
 #define RC_SIZE 4096
+
+typedef struct _Data
+{
+    char rc_buf[RC_SIZE];
+    int f_size;
+}Data, *pData;
 
 int main(int argc, char *argv[])
 {
@@ -16,16 +23,19 @@ int main(int argc, char *argv[])
     int dst_fd;	//destnation
     int c_ret;	//connect
     int wr_ret;	//write
+    int rf_size;
     ssize_t s_ret;  //send
     ssize_t r_ret;  //recv
 
     struct sockaddr_in sd_addr; 
+    Data data;
     int sd_len = sizeof(struct sockaddr_in);
     char sd_buf[SD_SIZE] = "";
-    char rc_buf[RC_SIZE] = "";
+    //char rc_buf[RC_SIZE] = "";
 
     //zero setting
     bzero(&sd_addr, sd_len);
+    bzero(&data, sizeof(Data));
 
     //assignment
     sd_addr.sin_family = AF_INET;
@@ -53,19 +63,21 @@ int main(int argc, char *argv[])
 	printf("send filename failed!\n"); 
 	return -1;
     }
-
+    
     //recv data
-    r_ret = recv(sd_fd, rc_buf, RC_SIZE, 0); 
+    r_ret = recv(sd_fd, &data, sizeof(Data), 0); 
     if(-1 == r_ret)
     {
 	printf("recv failed!\n"); 
 	return -1;
     }
-    
+    rf_size = data.f_size;
+    printf("%d\n", rf_size);
+
     //文件不存在返回处理
-    if(!strcmp("file net exist", rc_buf))
+    if(!strcmp("file not exist", data.rc_buf))
     {
-	printf("%s\n", rc_buf);
+	printf("%s\n", data.rc_buf);
 	return -1;
     }
 
@@ -78,13 +90,15 @@ int main(int argc, char *argv[])
     }
 
     //write data
-    wr_ret = write(dst_fd, rc_buf, RC_SIZE);
+    wr_ret = write(dst_fd, data.rc_buf, RC_SIZE);
     if(-1 == wr_ret)
     {
 	printf("write file failed.\n");	
 	return -1;
     }
-    //printf("rc_buf:%s\n", rc_buf);
 
+    //关闭文件描述符
+    close(sd_fd);
+    close(dst_fd);
     return 0;
 }

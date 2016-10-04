@@ -7,12 +7,17 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+//#include "common.h"
 
 #define RC_SIZE 16
 #define SD_SIZE 4096
 #define RD_SIZE 4096
 
-typedef struct stat Stat;
+typedef struct _Data
+{
+    char sd_buf[SD_SIZE];
+    int f_size;	//file size
+}Data, *pData;
 
 int FilePropertiesView(char *filename);
 
@@ -23,22 +28,24 @@ int main()
     int so_fd; //source
     int b_ret;	//bind
     int l_ret;	//listen
-    int f_size;	//file size
+    int sf_size;    //file size
     ssize_t s_ret;  //send
     ssize_t r_ret;  //recv
     ssize_t rd_ret; //read
 
     struct sockaddr_in sr_addr;
     struct sockaddr_in cl_addr;
+    Data data;
     int s_len = sizeof(struct sockaddr_in);
     int c_len = sizeof(struct sockaddr_in);
     char rc_buf[RC_SIZE] = "";
-    char sd_buf[SD_SIZE] = "";
+    //char sd_buf[SD_SIZE] = "";
     char rd_buf[RD_SIZE] = "";
 
     //zeor setting
     bzero(&sr_addr, s_len);
     bzero(&cl_addr, c_len);
+    bzero(&data, sizeof(Data));
 
     //assignment
     sr_addr.sin_family = AF_INET;
@@ -88,17 +95,16 @@ int main()
 	}
 
 	//检查文件是否存在
-	f_size = FilePropertiesView(rc_buf);
-	if(-1 == f_size)
+	int sf_size = FilePropertiesView(rc_buf);
+	if(-1 == sf_size)
 	{
 	    printf("file not exist.\n");	
-	    send(cl_fd , "file not exist", SD_SIZE, 0);
+	    //文件不存在后的一些处理
+	    strcpy(data.sd_buf, "file not exist");
+	    data.f_size = -1;
+	    send(cl_fd , &data, sizeof(data), 0);
 	    continue;
 	}
-	printf("%d\n", f_size);
-
-	//获得原始文件的大小
-	
 
 	//从原始文件中读取数据
 	so_fd = open(rc_buf, O_RDONLY, 0666);
@@ -114,18 +120,23 @@ int main()
 	    printf("read file failed.\n");	
 	    return -1;
 	}
-	//printf("rd_buf:%s\n", rd_buf);
 
 	//将读到的数据拷贝并发送给client
-	strcpy(sd_buf, rd_buf);
-	s_ret = send(cl_fd, sd_buf, SD_SIZE, 0);
+	strcpy(data.sd_buf, rd_buf);
+	//将文件大小传送给客户端
+	data.f_size = sf_size;
+	s_ret = send(cl_fd, &data, sizeof(Data), 0);
 	if(-1 == s_ret)
 	{
 	    printf("send filename failed!\n"); 
 	    return -1;
 	}
+
+	//关闭各种文件描述符
+
 #endif
     }
+
     return 0;
 }
 
@@ -137,12 +148,10 @@ int FilePropertiesView(char *filename)
 	printf("open failure\n"); 
 	return; 
     }
-
-    Stat *file_info;
+    struct stat *file_info;
     struct dirent *rf = NULL;
 
     memset(file_info, 0, sizeof(stat));
-    printf("%s\n", filename);
     while(rf = readdir(dir))
     {
 	//使用stat函数将文件名和结构体关联
@@ -152,6 +161,7 @@ int FilePropertiesView(char *filename)
 	if((!strcmp(filename, rf->d_name))  && S_ISREG(file_info->st_mode))
 	{
 	    printf("file %s exist.\n", filename);	
+	    //返回原始文件的大小
 	    return (int)file_info->st_size;
 	}
     }
