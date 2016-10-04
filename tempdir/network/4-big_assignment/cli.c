@@ -24,6 +24,7 @@ int main(int argc, char *argv[])
     int c_ret;	//connect
     int wr_ret;	//write
     int rf_size;
+    int flag = 1;
     ssize_t s_ret;  //send
     ssize_t r_ret;  //recv
 
@@ -65,37 +66,47 @@ int main(int argc, char *argv[])
     }
     
     //recv data
-    r_ret = recv(sd_fd, &data, sizeof(Data), 0); 
-    if(-1 == r_ret)
+    do
     {
-	printf("recv failed!\n"); 
-	return -1;
-    }
-    rf_size = data.f_size;
-    printf("%d\n", rf_size);
+	r_ret = recv(sd_fd, &data, sizeof(Data), 0); 
+	if(-1 == r_ret)
+	{
+	    printf("recv failed!\n"); 
+	    return -1;
+	}
+	//printf("%d\n", data.f_size);
+	
+	if(flag)
+	{
+	    rf_size = data.f_size;
+	    printf("%d\n", rf_size);
+	    flag = 0;
+	    rf_size -= RC_SIZE;
+	}
 
-    //文件不存在返回处理
-    if(!strcmp("file not exist", data.rc_buf))
-    {
-	printf("%s\n", data.rc_buf);
-	return -1;
-    }
+	//文件不存在返回处理
+	if(!strcmp("file not exist", data.rc_buf))
+	{
+	    printf("%s\n", data.rc_buf);
+	    return -1;
+	}
 
-    //接收download的文件
-    dst_fd = open("./recvFile", O_WRONLY | O_CREAT | O_TRUNC, 0666);
-    if(dst_fd < 0)
-    {
-	printf("open source failed.\n");
-	return -1; 
-    }
+	//接收download的文件
+	dst_fd = open("./recvFile", O_WRONLY | O_CREAT | O_APPEND, 0666);
+	if(dst_fd < 0)
+	{
+	    printf("open source failed.\n");
+	    return -1; 
+	}
 
-    //write data
-    wr_ret = write(dst_fd, data.rc_buf, RC_SIZE);
-    if(-1 == wr_ret)
-    {
-	printf("write file failed.\n");	
-	return -1;
-    }
+	//write data
+	wr_ret = write(dst_fd, data.rc_buf, RC_SIZE);
+	if(-1 == wr_ret)
+	{
+	    printf("write file failed.\n");	
+	    return -1;
+	}
+    }while(0 <= (rf_size -= RC_SIZE));
 
     //关闭文件描述符
     close(sd_fd);

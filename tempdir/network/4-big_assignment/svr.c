@@ -114,22 +114,27 @@ int main()
 	    return -1; 
 	}
 
-	rd_ret = read(so_fd, rd_buf, RD_SIZE);
-	if(-1 == rd_ret)
-	{
-	    printf("read file failed.\n");	
-	    return -1;
-	}
-
-	//将读到的数据拷贝并发送给client
-	strcpy(data.sd_buf, rd_buf);
-	//将文件大小传送给客户端
 	data.f_size = sf_size;
-	s_ret = send(cl_fd, &data, sizeof(Data), 0);
-	if(-1 == s_ret)
+	printf("%d\n", sf_size);
+	while(0 <= sf_size)
 	{
-	    printf("send filename failed!\n"); 
-	    return -1;
+	    rd_ret = read(so_fd, rd_buf, RD_SIZE);
+	    if(-1 == rd_ret)
+	    {
+		printf("read file failed.\n");	
+		return -1;
+	    }
+
+	    //将读到的数据拷贝并发送给client
+	    strcpy(data.sd_buf, rd_buf);
+	    //将文件大小传送给客户端
+	    s_ret = send(cl_fd, &data, sizeof(Data), 0);
+	    if(-1 == s_ret)
+	    {
+		printf("send filename failed!\n"); 
+		return -1;
+	    }
+	    sf_size -= RD_SIZE;
 	}
 
 	//关闭各种文件描述符
