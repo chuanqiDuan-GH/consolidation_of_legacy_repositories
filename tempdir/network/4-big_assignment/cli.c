@@ -43,6 +43,12 @@ int main(int argc, char *argv[])
     sd_addr.sin_port = htons(9527);
     inet_pton(AF_INET, "127.0.0.1", &sd_addr.sin_addr);
 
+    if(2 != argc)
+    {
+	printf("input wrong.\n"); 
+	return -1;
+    }
+
     //socket
     sd_fd = socket(AF_INET, SOCK_STREAM, 0);
     if(-1 == sd_fd)
@@ -74,15 +80,6 @@ int main(int argc, char *argv[])
 	    printf("recv failed!\n"); 
 	    return -1;
 	}
-	//printf("%d\n", data.f_size);
-	
-	if(flag)
-	{
-	    rf_size = data.f_size;
-	    printf("%d\n", rf_size);
-	    flag = 0;
-	    rf_size -= RC_SIZE;
-	}
 
 	//文件不存在返回处理
 	if(!strcmp("file not exist", data.rc_buf))
@@ -91,12 +88,32 @@ int main(int argc, char *argv[])
 	    return -1;
 	}
 
+	if(flag)
+	{
+	    rf_size = data.f_size;
+	    printf("%d\n", rf_size);
+	    flag = 0;
+	    rf_size -= RC_SIZE;
+	}
+
 	//接收download的文件
-	dst_fd = open("./recvFile", O_WRONLY | O_CREAT | O_APPEND, 0666);
+	dst_fd = open("./download", O_WRONLY | O_CREAT | O_APPEND, 0666);
 	if(dst_fd < 0)
 	{
 	    printf("open source failed.\n");
 	    return -1; 
+	}
+
+	if(data.f_size < RC_SIZE)
+	{
+	    //write data
+	    wr_ret = write(dst_fd, data.rc_buf, data.f_size);
+	    if(-1 == wr_ret)
+	    {
+		printf("write file failed.\n");	
+		return -1;
+	    }
+	    break;
 	}
 
 	//write data

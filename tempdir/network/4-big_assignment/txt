@@ -1,0 +1,67 @@
+hello linux
+这是一个测试文件
+2016/10/03
+
+
+分类：
+
+为什么需要htons(), ntohl(), ntohs()，htons() 函数：
+
+在C/C++写网络程序的时候，往往会遇到字节的网络顺序和主机顺序的问题。这是就可能用到htons(), ntohl(), ntohs()，htons()这4个函数。
+
+网络字节顺序与本地字节顺序之间的转换函数：
+
+htonl()--"Host to Network Long"
+ntohl()--"Network to Host Long"
+htons()--"Host to Network Short"
+ntohs()--"Network to Host Short"
+
+之所以需要这些函数是因为计算机数据表示存在两种字节顺序：NBO与HBO
+
+网络字节顺序NBO（Network Byte Order）：
+按从高到低的顺序存储，在网络上使用统一的网络字节顺序，可以避免兼容性问题。
+
+主机字节顺序（HBO，Host Byte Order）：
+不同的机器HBO不相同，与CPU设计有关，数据的顺序是由cpu决定的,而与操作系统无关。
+如 Intelx86结构下,short型数0x1234表示为34 12, int型数0x12345678表示为78 56 34 12如IBM power PC结构下,short型数0x1234表示为12 34, int型数0x12345678表示为12   34 56 78
+
+由于这个原因不同体系结构的机器之间无法通信,所以要转换成一种约定的数序,也就是网络字节顺序,其实就是如同powerpc那样的顺序 。在PC开发中有ntohl和htonl函数可以用来进行网络字节和主机字节的转换。   
+
+
+2.
+
+在Linux和Windows网络编程时需要用到htons和htonl函数，用来将主机字节顺序转换为网络字节顺序。
+
+    在Intel机器下，执行以下程序
+int main()
+{
+    printf("%d \n",htons(16));
+    return 0;
+}
+
+得到的结果是4096，初一看感觉很怪。
+
+解释如下，数字16的16进制表示为0x0010，数字4096的16进制表示为0x1000。 由于Intel机器是小尾端，存储数字16时实际顺序为1000，存储4096时实际顺序为0010。因此在发送网络包时为了报文中数据为0010，需要 经过htons进行字节转换。如果用IBM等大尾端机器，则没有这种字节顺序转换，但为了程序的可移植性，也最好用这个函数。
+
+另外用注意，数字所占位数小于或等于一个字节（8 bits）时，不要用htons转换。这是因为对于主机来说，大小尾端的最小单位为字节(byte)。
+
+包含的头文件为："winsock2.h"
+阅读(12124) | 评论(0) | 转发(2) |
+0
+
+上一篇：不能显示隐藏文件的解决
+
+下一篇：mac包,ip包,tcp包 格式说明
+相关热门文章
+
+A sample .exrc file for vi e...
+IBM System p5 服务器 HACMP ...
+游标的特征
+DB2 9 应用开发（733 考试）认...
+busybox的httpd使用CGI脚本(Bu...
+
+	linux dhcp peizhi roc
+	关于Unix文件的软链接
+	求教这个命令什么意思，我是新...
+	sed -e "/grep/d" 是什么意思...
+	谁能够帮我解决LINUX 2.6 10...

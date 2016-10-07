@@ -131,7 +131,7 @@ int main()
 	    s_ret = send(cl_fd, &data, sizeof(Data), 0);
 	    if(-1 == s_ret)
 	    {
-		printf("send filename failed!\n"); 
+		printf("send data failed!\n"); 
 		return -1;
 	    }
 	    sf_size -= RD_SIZE;
