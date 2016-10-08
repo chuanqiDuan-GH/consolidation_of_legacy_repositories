@@ -9,7 +9,7 @@
 //#include "common.h"
 
 #define SD_SIZE 16
-#define RC_SIZE 4096
+#define RC_SIZE 1024
 
 typedef struct _Data
 {
@@ -70,7 +70,17 @@ int main(int argc, char *argv[])
 	printf("send filename failed!\n"); 
 	return -1;
     }
-    
+
+#if 0
+    //打开接收download的文件
+    dst_fd = open("./download", O_WRONLY | O_CREAT | O_APPEND, 0666);
+    if(dst_fd < 0)
+    {
+	printf("open source failed.\n");
+	return -1; 
+    }
+
+ 
     //recv data
     do
     {
@@ -97,12 +107,14 @@ int main(int argc, char *argv[])
 	}
 
 	//接收download的文件
+	/*
 	dst_fd = open("./download", O_WRONLY | O_CREAT | O_APPEND, 0666);
 	if(dst_fd < 0)
 	{
 	    printf("open source failed.\n");
 	    return -1; 
 	}
+	*/
 
 	if(data.f_size < RC_SIZE)
 	{
@@ -124,6 +136,31 @@ int main(int argc, char *argv[])
 	    return -1;
 	}
     }while(0 <= (rf_size -= RC_SIZE));
+#endif
+    FILE *fp = fopen("./dl", "w+");
+    if(NULL == fp)
+    {
+	printf("File:\t%s Can Not Open To Write\n", sd_buf);
+	return -1;;
+    }
+
+    // 从服务器接收数据到buffer中
+    // 每接收一段数据，便将其写入文件中，循环直到文件接收完并写完为止
+    bzero(data.rc_buf, RC_SIZE);
+    int length = 0;
+    while((length = recv(sd_fd, data.rc_buf, RC_SIZE, 0)) > 0)
+    {
+	if(fwrite(data.rc_buf, sizeof(char), length, fp) < length)
+	{
+	    printf("File:\t%s Write Failed\n", sd_buf);
+	    break;
+	}
+	bzero(data.rc_buf, RC_SIZE);
+    }
+
+    // 接收成功后，关闭文件，关闭socket
+    printf("Receive File:\t%s From Server IP Successful!\n", sd_buf);
+    fclose(fp);
 
     //关闭文件描述符
     close(sd_fd);

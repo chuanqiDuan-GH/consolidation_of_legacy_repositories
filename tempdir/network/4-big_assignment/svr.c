@@ -10,8 +10,8 @@
 //#include "common.h"
 
 #define RC_SIZE 16
-#define SD_SIZE 4096
-#define RD_SIZE 4096
+#define SD_SIZE 1024
+#define RD_SIZE 1024
 
 typedef struct _Data
 {
@@ -106,6 +106,7 @@ int main()
 	    continue;
 	}
 
+#if 0
 	//从原始文件中读取数据
 	so_fd = open(rc_buf, O_RDONLY, 0666);
 	if(so_fd < 0)
@@ -113,9 +114,10 @@ int main()
 	    printf("open source failed.\n");
 	    return -1; 
 	}
-
+#endif
 	data.f_size = sf_size;
 	printf("%d\n", sf_size);
+#if 0
 	while(0 <= sf_size)
 	{
 	    rd_ret = read(so_fd, rd_buf, RD_SIZE);
@@ -136,7 +138,34 @@ int main()
 	    }
 	    sf_size -= RD_SIZE;
 	}
+#endif	
+	FILE *fp = fopen(rc_buf, "r");
+	if(NULL == fp)
+	{
+	    printf("File:%s Not Found\n", rc_buf);
+	}
+	else
+	{
+	    bzero(&data, sizeof(Data));
+	    int length = 0;
+	    // 每读取一段数据，便将其发送给客户端，循环直到文件读完为止
+	    while((length = fread(data.sd_buf, sizeof(char), SD_SIZE, fp)) > 0)
+	    {
+		if(send(cl_fd, &data, length, 0) < 0)
+		{
+		    printf("Send File:%s Failed./n", rc_buf);
+		    break;
+		}
+		bzero(&data, sizeof(Data));
+	    }
 
+	    // 关闭文件
+	    fclose(fp);
+	    printf("File:%s Transfer Successful!\n", rc_buf);
+	}
+	// 关闭与客户端的连接
+
+	close(so_fd);
 	//关闭各种文件描述符
 
 #endif
