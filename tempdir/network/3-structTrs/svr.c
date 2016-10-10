@@ -81,15 +81,19 @@ void *ThreadFunc(void *arg)
     int cfd = *(int *)arg;
     typedef struct _ST
     {
-	char c1[5];
-	char c2[4];
+	char *c[2];
+	//char c2[4];
 	int n;
     }ST;
     //int ret;
     ST rbuf;
+
+    rbuf.c[0] = (char *)malloc(5);
+    rbuf.c[1] = (char *)malloc(5);
     rev = recv(cfd, &rbuf, sizeof(ST), 0);
     //ret = atoi(rbuf);
-    printf("recv from client value %s %s %d\n", rbuf.c1, (rbuf.c2), rbuf.n);
+    //printf("recv from client value %s %s %d\n", rbuf.c[0], rbuf.c[1], rbuf.n);
+    printf("recv from client value %d %d\n", *(rbuf.c[0]), rbuf.n);
 
     send(cfd, "thankyou", 8, 0);
     close(cfd);

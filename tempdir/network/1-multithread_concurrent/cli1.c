@@ -26,7 +26,9 @@ int main()
     inet_pton(AF_INET, "127.0.0.1", &s_addr.sin_addr);
 
     //connect to server
-    connect(sfd, (struct sockaddr *)&s_addr, s_len);
+    int ret = connect(sfd, (struct sockaddr *)&s_addr, s_len);
+    printf("%d\n", ret);
+    
 
     //communication
     gets(sbuf);

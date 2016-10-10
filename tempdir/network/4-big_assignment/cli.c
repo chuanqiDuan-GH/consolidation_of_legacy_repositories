@@ -6,7 +6,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
-//#include "common.h"
 
 #define SD_SIZE 16
 #define RC_SIZE 1024

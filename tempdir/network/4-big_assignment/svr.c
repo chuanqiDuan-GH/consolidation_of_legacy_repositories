@@ -7,7 +7,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
-//#include "common.h"
 
 #define RC_SIZE 16
 #define SD_SIZE 1024
@@ -106,7 +105,7 @@ int main()
 	    continue;
 	}
 
-#if 0
+#ifdef FILEIO
 	//从原始文件中读取数据
 	so_fd = open(rc_buf, O_RDONLY, 0666);
 	if(so_fd < 0)
@@ -117,7 +116,7 @@ int main()
 #endif
 	data.f_size = sf_size;
 	printf("%d\n", sf_size);
-#if 0
+#ifdef FILEIO
 	while(0 <= sf_size)
 	{
 	    rd_ret = read(so_fd, rd_buf, RD_SIZE);

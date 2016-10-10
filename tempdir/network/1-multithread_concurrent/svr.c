@@ -31,7 +31,7 @@ int main()
 
     //定义socket描述符
     sfd = socket(AF_INET, SOCK_STREAM, 0);
-    printf("rev %d\n", sfd );
+    printf("%d\n", sfd );
 
     //绑定ip port address
     rev = bind(sfd, (struct sockaddr *)&s_addr, s_len);
@@ -49,6 +49,7 @@ int main()
 	    perror("Err in accept\n");
 	    exit(1);
 	}
+	printf("%d\n", cfd);
 
 	//与客户端通信
 	//write read

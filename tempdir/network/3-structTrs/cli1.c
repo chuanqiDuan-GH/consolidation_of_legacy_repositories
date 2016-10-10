@@ -17,8 +17,8 @@ int main()
     int num_buf = 0x12345;
     typedef struct _ST
     {
-	char c1[5];
-	char c2[4];
+	char *c[2];
+	//char c2[4];
 	int n;
     }ST;
 
@@ -41,8 +41,14 @@ int main()
 
     //sprintf(sbuf, "%x", num_buf);
     ST st;
-    strcpy(st.c1,"c1");
-    strcpy(st.c2,"c2");
+    st.c[0] = (char *)malloc(5);
+    st.c[1] = (char *)malloc(5);
+
+    strcpy(st.c[0],"c0");
+    strcpy(st.c[1],"c1");
+    printf("%s\n",st.c[0]);
+    printf("%s\n",st.c[1]);
+    //strcpy(st.c2,"c2");
     st.n = 1;
     
     send(sfd, &st,sizeof(ST), 0);
