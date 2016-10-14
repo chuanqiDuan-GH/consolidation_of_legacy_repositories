@@ -56,18 +56,24 @@ void * select_option(void *c_fd)
     pthread_exit(0);
 }
 
-
 int signup()
 {	
     int ret=-1;
     char temp_buf[TEMP_SIZE]="";
     int i;
-    send(fd,"ok",2,0);
+    send(fd,"ok",2,0);	//确认消息
     bzero(&accbuf,sizeof(Account));
+
+    //接收客户端注册表数据
     recv(fd,&accbuf,sizeof(Account),0);
 
-    sprintf(temp_buf,"select * from account where name ='%s'",accbuf.name);
-    ret = mysql_query(&conn,temp_buf); 
+     /*
+    根据用户名查询要登录的帐号是否存在
+    这个动组由三个步骤完成,query()查询,store_result()存储查询结果,num_rows()验证结果
+    查询验证三步(1)
+    */
+    sprintf(temp_buf,"select * from account where name ='%s'",accbuf.name); //组合mysql命令
+    ret = mysql_query(&conn,temp_buf);	//mysql_query()函数用来对数据库执行各种操作
     if(ret != 0)
     {
 	perror("mysql_query");
@@ -75,7 +81,10 @@ int signup()
 	printf("%d signup no\n",__LINE__);
 	return -1;
     }
-    res_ptr = mysql_store_result(&conn);
+
+    
+    //查询验证三步(2)
+    res_ptr = mysql_store_result(&conn);    //获得mysql_query()的结果并保存下来供后续操作
     if(res_ptr ==NULL )
     {
 	perror("mysql_store_result");
@@ -83,7 +92,10 @@ int signup()
 	printf("%d signup no\n",__LINE__);
 	return -1;
     }
-    ret = mysql_num_rows(res_ptr);
+    
+    //查询验证三步(3)
+    //返回查询结果的行数,如果返回大于1的值，证明要注册的帐号已经存在
+    ret = mysql_num_rows(res_ptr);  
     if(ret != 0)
     {
 	send(fd,"no",2,0);
@@ -91,6 +103,10 @@ int signup()
 	return -1;
     }
 
+    /*
+    通过mysql_query()执行调用 mysql_store_result()存储调用那个结果 mysql_num_rows()查询是否已存在
+    一系列操作,已经可以确定是否可以插入新帐号,下面即执行插入新帐号操作
+    */
     bzero(temp_buf,sizeof(temp_buf));
     sprintf(temp_buf,"insert into account values('%s',%s)",accbuf.name,accbuf.passwd);
     ret=mysql_query(&conn,temp_buf);
@@ -115,10 +131,18 @@ int  signin()
     char temp_buf[TEMP_SIZE]="";
     send(fd,"ok",2,0);
     bzero(&accbuf,sizeof(Account));
+
+    //接受客户端传过来的用户登录信息
     recv(fd,&accbuf,sizeof(Account),0);
     printf("%d get account \n",__LINE__);
+    
+    /*
+    根据用户名查询要登录的帐号是否存在
+    这个动组由三个步骤完成,query()查询,store_result()存储查询结果
+    fetch_row()通过name获取passwd
+    查询获取三步(1)
+    */
     sprintf(temp_buf,"select * from account where name='%s'",accbuf.name);
-
     ret = mysql_query(&conn,temp_buf);
     if(ret != 0)
     {
@@ -127,6 +151,8 @@ int  signin()
 	printf("%d signin no\n",__LINE__);
 	return -1;
     }
+    //查询获取三步(2)
+    //存储查询结果
     res_ptr = mysql_store_result(&conn);
 
     if(res_ptr == NULL )
@@ -136,8 +162,10 @@ int  signin()
 	printf("%d signin no\n",__LINE__);
 	return -1;
     }
-    sqlrow = mysql_fetch_row(res_ptr);
 
+    //通过name获取passwd
+    //查询获取三步(3)
+    sqlrow = mysql_fetch_row(res_ptr);
     if(sqlrow==NULL)
     {
 	send(fd,"no",2,0);
@@ -150,6 +178,7 @@ int  signin()
 	printf("passwd=%s\n",sqlrow[1]);
     }
 
+    //对比用户输入的密码,正确通过,反之不通过
     if(strcmp(getpasswd,accbuf.passwd)==0)
     {
 	success=1;
@@ -173,8 +202,9 @@ int insert()
     bzero(buf,BUF_SIZE);
     recv(fd,buf,BUF_SIZE,0);
     char temp_buf[TEMP_SIZE]="";
-    sprintf(temp_buf,"insert into %s values(%s)",name,buf);
+    sprintf(temp_buf,"insert into %s values(%s)",name,buf); //look here
     int ret=-1;
+    //调用插入语句
     ret = mysql_query(&conn,temp_buf);
     printf(" %d get data\n",__LINE__);
     if(ret != 0)
@@ -200,6 +230,7 @@ int delet ()
     sprintf(temp_buf,"delete from %s where time =%s",name,buf);
     printf("%s\n", temp_buf);
     int ret=-1;
+    //调用删除语句
     ret = mysql_query(&conn,temp_buf);
     if(ret != 0)
     {

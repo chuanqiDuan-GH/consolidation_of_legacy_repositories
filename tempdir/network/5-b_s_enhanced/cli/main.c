@@ -92,7 +92,7 @@ int main( )
 	    if(ret == 0)
 		printf("send failed.\n");
 
-	    if ( do_connect(command.argv1,&sock_fd) == -1 )
+	    if ( do_connect(command.argv1, &sock_fd) == -1 )
 	    {
 		printf("connect failed\n");
 		//exit(1);

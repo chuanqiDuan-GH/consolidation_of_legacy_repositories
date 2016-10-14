@@ -6,24 +6,25 @@ int fd;
 #define TEMP_SIZE 256
 #define SIZE 12
 
+//数据库相关声明
 MYSQL conn;
 MYSQL_RES *res_ptr;
 MYSQL_ROW sqlrow;
 MYSQL_FIELD *myfd;
 
-int success=0;
+int success=0;	//用户数据表操作标识符
 char name[SIZE]="";
 char buf[BUF_SIZE]="";
 
-typedef struct ACCOUNT
+typedef struct ACCOUNT	//注册表数据结构体
 {
-	char name[SIZE];
-	char passwd[SIZE];
+	char name[SIZE];    //用户名
+	char passwd[SIZE];  //密码
 }Account;
 Account accbuf;
 
-int signup();
-int  signin();
-int function();
+int signup();	//注册
+int  signin();	//登录
+int function();	//用户数据表操作函数
 
 #endif

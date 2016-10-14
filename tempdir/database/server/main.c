@@ -14,7 +14,7 @@ int main()
     //赋值
     src.sin_family=AF_INET;
     src.sin_port=htons(8000);
-    inet_pton(AF_INET,"192.168.1.141",&src.sin_addr);
+    inet_pton(AF_INET,"127.0.0.1",&src.sin_addr);
 
     //返回文件文件描述符
     s_fd=socket(AF_INET,SOCK_STREAM,0);

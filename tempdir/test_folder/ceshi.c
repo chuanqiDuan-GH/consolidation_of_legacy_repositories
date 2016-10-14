@@ -40,6 +40,7 @@ void main ( )
     gets(str);
     printf("%d", strcmp(str, "add"));
 #endif
+#if 0
     char str[1] = {'0'};
     int i = 1000;
     fflush(stdout);
@@ -51,6 +52,10 @@ void main ( )
     }
     system("free -m");    
     while(1);
+#endif
+#if 0
+    int num[][2] = {{1,2}, {3,4,5}};
+#endif
 }
 
 
