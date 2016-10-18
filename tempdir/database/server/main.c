@@ -1,6 +1,6 @@
 #include"common.h"
 
-
+//本程序中,数据库名为bracelet,注册信息表名为account,用户信息表名以用户注册的帐号名为准
 int main()
 {	
     struct sockaddr_in src,dest;

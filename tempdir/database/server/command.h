@@ -10,7 +10,7 @@ int fd;
 MYSQL conn;
 MYSQL_RES *res_ptr;
 MYSQL_ROW sqlrow;
-MYSQL_FIELD *myfd;
+//MYSQL_FIELD *myfd;	//储存列信息？ 没用到？
 
 int success=0;	//用户数据表操作标识符
 char name[SIZE]="";

@@ -10,7 +10,7 @@ void * select_option(void *c_fd)
     pthread_detach(pthread_self()); //分离线程
     mysql_init(&conn);	//初始化数据库
 
-    //链接数据库
+    //连接数据库
     if( mysql_real_connect(&conn,"localhost","root","1","bracelet",0,NULL,0) )
     {
 	printf("connect ok\n");
@@ -151,8 +151,8 @@ int  signin()
 	printf("%d signin no\n",__LINE__);
 	return -1;
     }
-    //查询获取三步(2)
     //存储查询结果
+    //查询获取三步(2)
     res_ptr = mysql_store_result(&conn);
 
     if(res_ptr == NULL )
@@ -183,6 +183,7 @@ int  signin()
     {
 	success=1;
 	bzero(name,SIZE);
+	//验证成功的同时，会将用户名保存在name变量中做后续使用
 	strcpy(name,accbuf.name);
 	send(fd,"ok",2,0);
 	printf("%d signin ok\n",__LINE__);
@@ -202,7 +203,9 @@ int insert()
     bzero(buf,BUF_SIZE);
     recv(fd,buf,BUF_SIZE,0);
     char temp_buf[TEMP_SIZE]="";
-    sprintf(temp_buf,"insert into %s values(%s)",name,buf); //look here
+    //插入的数据要以逗号隔开,例如insert into dcq values(1,2,3,4)
+    //所以键盘输入也要以这种形式输入
+    sprintf(temp_buf,"insert into %s values(%s)",name,buf);
     int ret=-1;
     //调用插入语句
     ret = mysql_query(&conn,temp_buf);
@@ -227,6 +230,8 @@ int delet ()
     bzero(buf,BUF_SIZE);
     recv(fd,buf,BUF_SIZE,0);
     char temp_buf[TEMP_SIZE]="";
+    //name代表对应的用户表
+    //以time的值来做为表中每一条数句的索引(键值)来唯一确定的找到某条数据
     sprintf(temp_buf,"delete from %s where time =%s",name,buf);
     printf("%s\n", temp_buf);
     int ret=-1;
@@ -250,9 +255,15 @@ int delet ()
 int show()
 {
     char temp_buf[TEMP_SIZE]="";
+    /*
+    这里的name变量在登录成功时会被赋值,所以登录的哪个帐号,就会根据哪个帐号来显示
+    其对应的用户表信息
+    */ 
     sprintf(temp_buf,"select * from %s ",name);
     int ret=-1;
     int i;
+
+    //执行select * from 对应用户名
     ret = mysql_query(&conn,temp_buf);
     if(ret != 0)
     {
@@ -270,8 +281,18 @@ int show()
 	return -1;
     }
 
+    /*
+    mysql_fetch_row()从和结果标识 data 关联的结果集中取得一行数据并作为数组返回,
+    每个结果的列储存在一个数组的单元中，偏移量从 0 开始	
+    */
     while(sqlrow = mysql_fetch_row(res_ptr))
     {	
+
+	/* 
+	这里sqlrow的下标数目是表中数据的数据种类有多少,也可以理解为有多少列数据,
+	下标从0开始,本程序中用户数据表有time,step,km,sleep四种数据,所以取每行数据时,
+	下标从0遍历到3即可取出四种数据,然后继续取下一行数据,直到表中数据取完返回NULL
+	*/
 	for(i=0;i<4;i++)
 	{
 	    send(fd,sqlrow[i],16,0);
@@ -289,6 +310,8 @@ int function()
     int ret=-1;
     char vbuf[SIZE]="";
 
+    //在做对应处理之前,先会验证登录的用户是否已有对应的用户数据表，如果没有则创建
+    //显示已有的表(注册信息表和用户信息表在统一个数据库下)
     ret=mysql_query(&conn,"show tables");
     if(ret != 0)
     {
@@ -304,6 +327,10 @@ int function()
 	return -1;
     }
 
+    /*遍历的从res_ptr结果中取出show tabels操作的所需的项目,
+     sqlrow[0]就代表用户名,逐一拿到之后与当前客户端所输入的用户名作对比,
+     problem!
+    */
     while(sqlrow = mysql_fetch_row(res_ptr))
     {
 	if(strcmp(name,sqlrow[0])==0)
@@ -313,6 +340,7 @@ int function()
     }
     if(sqlrow == NULL )
     {
+	//创建用户数据表
 	sprintf(temp_buf,"create table %s (time varchar(10) not null primary key,step varchar(16),km varchar(8),sleep varchar(8))",name);
 	ret = mysql_query(&conn,temp_buf);
 	if(ret != 0)
@@ -324,6 +352,7 @@ int function()
     }
     mysql_free_result(res_ptr);
 
+    //用户数据表的操作
     while(1)
     {
 	printf("input command\n");

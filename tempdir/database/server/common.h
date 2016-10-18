@@ -15,7 +15,7 @@
 #include<stdio.h>
 #include<mysql/mysql.h>
 
-void * select_option(void * c_fd);
+void * select_option(void * c_fd);  //操作选择函数
 
 #endif
 
