@@ -8,15 +8,16 @@
 #include <netinet/in.h>
 #include <string.h>
 
-#define PORT 8000
+#define PORT 8000   //端口号
 
-#define CMD_LEN 64
+#define CMD_LEN 64  //操作命令的长度
 #define SID_LEN 12  //signin data len
 
+//承载注册登录信息的结构体
 typedef struct User_data
 {
-    char account[SID_LEN]; 
-    char passwd[SID_LEN];
+    char account[SID_LEN]; //账号
+    char passwd[SID_LEN];   //密码
 }UD, *pUD;
 
 #endif	//_COMMOND_H_
