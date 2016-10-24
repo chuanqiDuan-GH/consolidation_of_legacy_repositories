@@ -1,5 +1,5 @@
-#ifndef _common_h_
-#define _common_h_
+#ifndef _COMMON_H_ 
+#define _COMMON_H_
 
 #include <sys/types.h>			
 #include <sys/socket.h>
@@ -17,5 +17,5 @@
 
 void * select_option(void * c_fd);  //操作选择函数
 
-#endif
+#endif	//_COMMON_H_
 

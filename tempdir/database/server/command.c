@@ -327,10 +327,17 @@ int function()
 	return -1;
     }
 
-    /*遍历的从res_ptr结果中取出show tabels操作的所需的项目,
-     sqlrow[0]就代表用户名,逐一拿到之后与当前客户端所输入的用户名作对比,
-     problem!
+    /*遍历从res_ptr结果中取出show tabels操作的结果(这里的结果是取出了当前库中所有表的名字),
+     sqlrow[0]代表第一个用户名,逐一拿到之后与当前客户端所输入的用户名作对比,
+     之后会有两种处理逻辑:
+     1->
+     在遍历table表的名字过程中找到了登录所对应的用户名(即与name比较后相同),
+     说明当前账户对应的用户数据表已经存在,不用新建对应表
+     2->
+     遍历完后没有在table中找到对应登录用户回数据表名,所以sqlrow等于NULL,
+     这时就需要为当前用户创建一个对应的用户数据表
     */
+    //处理逻辑1->
     while(sqlrow = mysql_fetch_row(res_ptr))
     {
 	if(strcmp(name,sqlrow[0])==0)
@@ -338,6 +345,7 @@ int function()
 	    break;
 	}
     }
+    //处理逻辑2->
     if(sqlrow == NULL )
     {
 	//创建用户数据表
@@ -355,9 +363,9 @@ int function()
     //用户数据表的操作
     while(1)
     {
-	printf("input command\n");
 	bzero(vbuf,BUF_SIZE);
 	ret = recv(fd,vbuf,BUF_SIZE,0);
+
 	if(strcmp(vbuf,"insert")==0)
 	{
 	    insert();
@@ -373,15 +381,14 @@ int function()
 
 	else if(strcmp(vbuf,"signout")==0)
 	{	
-	    printf("siginout %s\n",vbuf);
 	    break;
 	}
 
+	//处理当用户在登录成空后的强制退出操作
 	if(ret ==0)
 	{
 	    break;
 	}   
     }
-    printf("down\n");
 }
 

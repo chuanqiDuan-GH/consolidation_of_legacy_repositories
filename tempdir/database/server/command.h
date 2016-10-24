@@ -1,5 +1,5 @@
-#ifndef _command_h_
-#define _command_h_
+#ifndef _COMMAND_H_
+#define _COMMAND_H_
 
 int fd;
 #define BUF_SIZE 256
@@ -10,7 +10,7 @@ int fd;
 MYSQL conn;
 MYSQL_RES *res_ptr;
 MYSQL_ROW sqlrow;
-//MYSQL_FIELD *myfd;	//储存列信息？ 没用到？
+//MYSQL_FIELD *myfd;	//储存列信息? 没用到?
 
 int success=0;	//用户数据表操作标识符
 char name[SIZE]="";
@@ -27,4 +27,4 @@ int signup();	//注册
 int  signin();	//登录
 int function();	//用户数据表操作函数
 
-#endif
+#endif	//_COMMAND_H_
