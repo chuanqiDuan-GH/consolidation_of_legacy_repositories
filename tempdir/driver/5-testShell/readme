@@ -1,0 +1,16 @@
+【功能】
+测试字符设备驱动阻塞与非阻塞IO以及设备文件中是否存在数据的4种情况
+1.|--block&no data(设备文件无数据)
+2.|--block&data(设备文件无数据)
+3.|--nonblock&no data
+4.|--nonnlock&data
+
+【结构】
+cdev.c	//设备驱动文件
+test.c	//应用层文件
+/*主测试脚本，调用不同可执行程序(阻塞和非阻塞分别对应block.out和nonblck.out)*/
+isBlock.sh  
+echoToFile.sh	//辅助测试脚本，循环写入数据到设备文件
+
+【执行】
+sudo ./isBlock.sh
