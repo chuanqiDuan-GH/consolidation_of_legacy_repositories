@@ -11,6 +11,7 @@ int main(int argc, char *argv[])
 	printf("wrong input\n");
 	return -1;	
     }
+
     FILE *rf = fopen(argv[1], "r");
     if(!rf)
     {
