@@ -228,21 +228,3 @@ void selectSort(pNode node)
     node->pNext = newLink;
     //return node;
 }
-
-
-void selectSort2(pNode node)
-{
-    if(NULL == node)
-    {
-	return; 
-    }
-    
-    pNode comp;
-    pNode insPos;
-    pNode min;
-    pNode preMin;
-    
-    
-    
-}
-

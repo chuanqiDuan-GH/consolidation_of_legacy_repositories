@@ -46,17 +46,17 @@ int insertList(pList p_list, int i_position, int value)
     }
     #endif
     
+    //通过realloc实现动态扩容
     #ifdef REALLOC_FUNC
-    //int length = 10;
-    printf("%d\n", length);
-    printf("%d\n", p_list->listLen);
+    //printf("%d\n", length);
+    //printf("%d\n", p_list->listLen);
     if(p_list->listLen >= length)
     {
 	length += 10;
 	p_list->arr = (int*)realloc(p_list->arr, sizeof(int)*length);	 
     }
-    printf("%d\n", length);
-    printf("\n");
+    //printf("%d\n", length);
+    //printf("\n");
     #endif
 
     int k = i_position;

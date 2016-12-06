@@ -16,6 +16,7 @@ int main()
 	insertList(list, i, i);
     }
     showList(list);
+
     for( ; j<40; j++)
     {
 	insertList(list, j, j);

@@ -23,7 +23,5 @@ void showLink(pNode node);
 void bubbleSort(pNode node);
 void bubbleSort2(pNode node); 
 void selectSort(pNode node);
-void selectSort2(pNode node);
-
 
 #endif //_LINKLIST_H_
