@@ -1,0 +1,5 @@
+[测试方法]
+1|--gcc fifoWriter.c -o wr
+2|--gcc fifoReader.c -o re
+3|--./wr testfile
+4|--./re testfile
