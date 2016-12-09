@@ -11,7 +11,7 @@ int do_connect(int *s_fd)
     sd_addr.sin_family = AF_INET;
     sd_addr.sin_port = htons(PORT);
     //这里的ip是本地回环测试地址,在实际测试中需要明确服务器地址
-    inet_pton(AF_INET, "127.0.0.1", &sd_addr.sin_addr);
+    inet_pton(AF_INET, "192.168.1.3", &sd_addr.sin_addr);
 
     *s_fd = socket(AF_INET, SOCK_STREAM, 0);
     int ret = connect(*s_fd, (struct sockaddr *)&sd_addr, sd_len); 

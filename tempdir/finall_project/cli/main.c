@@ -68,10 +68,10 @@ int main()
 	    do_bye();
 	    return 0;
 	}
-#if 0
-	else if(!strcasecmp(cmd, "insert") && (1 == cmd_flag))	//向用户数据表中插入数据
+#if 1
+	else if(!strcasecmp(cmd, "opencam") && (1 == cmd_flag))	
 	{
-	    strcpy(cmd_buf, "insert");
+	    strcpy(cmd_buf, "opencam");
 	    ret = send(s_fd, cmd_buf, strlen(cmd_buf), 0);
 	    if(-1 == ret)
 	    {
@@ -79,9 +79,9 @@ int main()
 	    }
 	    do_insert(s_fd);
 	}
-	else if(!strcasecmp(cmd, "delete") && (1 == cmd_flag))	//删除数据
+	else if(!strcasecmp(cmd, "closecam") && (1 == cmd_flag))
 	{
-	    strcpy(cmd_buf, "delete");
+	    strcpy(cmd_buf, "closecam");
 	    ret = send(s_fd, cmd_buf, strlen(cmd_buf), 0);
 	    if(-1 == ret)
 	    {
@@ -89,9 +89,29 @@ int main()
 	    }
 	    do_delete(s_fd);
 	}
-	else if(!strcasecmp(cmd, "show") && (1 == cmd_flag))	//显示数据
+	else if(!strcasecmp(cmd, "getenv") && (1 == cmd_flag))
 	{
-	    strcpy(cmd_buf, "show");
+	    strcpy(cmd_buf, "getenv");
+	    ret = send(s_fd, cmd_buf, strlen(cmd_buf), 0);
+	    if(-1 == ret)
+	    {
+		printf("send show cmd err\n"); 
+	    }
+	    do_show(s_fd);
+	}
+	else if(!strcasecmp(cmd, "getcam") && (1 == cmd_flag))
+	{
+	    strcpy(cmd_buf, "getcam");
+	    ret = send(s_fd, cmd_buf, strlen(cmd_buf), 0);
+	    if(-1 == ret)
+	    {
+		printf("send show cmd err\n"); 
+	    }
+	    do_show(s_fd);
+	}
+	else if(!strcasecmp(cmd, "getrtime") && (1 == cmd_flag))
+	{
+	    strcpy(cmd_buf, "getrtime");
 	    ret = send(s_fd, cmd_buf, strlen(cmd_buf), 0);
 	    if(-1 == ret)
 	    {
