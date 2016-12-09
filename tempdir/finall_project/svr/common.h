@@ -13,7 +13,7 @@
 #include <fcntl.h>
 #include <dirent.h>
 #include <stdio.h>
-#include <mysql/mysql.h>
+#include <sqlite3.h>
 
 void *cli_command(void *c_fd);   //处理客户端命令
 

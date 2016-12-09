@@ -6,11 +6,19 @@ int fd;
 #define TEMP_SIZE 256
 #define SIZE 12
 
-//数据库相关声明
+//sql数据库
+static sqlite3 *account;
+static char *errmsg;
+static char **resultp;
+static int nrow, ncolumn;
+
+#if MYSQL
+//mysql数据库相关声明
 MYSQL conn;
 MYSQL_RES *res_ptr;
 MYSQL_ROW sqlrow;
 //MYSQL_FIELD *myfd;	//储存列信息? 没用到?
+#endif
 
 int success=0;	//用户数据表操作标识符
 char name[SIZE]="";
