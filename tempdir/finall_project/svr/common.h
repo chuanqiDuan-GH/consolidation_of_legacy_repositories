@@ -17,7 +17,7 @@
 #include "camera.h"
 #include "M0.h"
 
-void cli_command(int *c_fd);   //处理客户端命令
+void cli_command(int *c_fd, int *m0_fd);   //处理客户端命令
 
 //cam    
 int init_cam(char *, char *);//初始化摄像头

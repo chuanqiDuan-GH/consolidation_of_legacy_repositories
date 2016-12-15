@@ -57,7 +57,7 @@ int main()
 	//多进程并发
 	if(fork() == 0)
 	{
-	    cli_command(&c_fd);	
+	    cli_command(&c_fd, &m0_fd);	
 	}
     }
     return 0;

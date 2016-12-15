@@ -3,7 +3,49 @@
 
 #define CLICMD_BUF 256
 #define TEMP_SIZE 256
-#define SIZE 12
+#define SIZE 16
+
+//用户操作码
+#define GETENV	1   //获取环境参数
+#define GETCAM 	2   //打开摄像头
+#define CTRLM0 	3   //M0相关控制
+#define SIGNUP 	4   //用户注册
+#define SIGNIN 	5   //用户登录
+//#define BYE
+
+//M0设备码
+#define LED	1   //LED
+#define BUZZ	2   //蜂鸣器
+#define FAN	3   //风扇
+
+//M0控制码
+#define  LEDON	    1	//开LED灯
+#define  LEDOFF	    2	//关LED灯
+#define	 FANON	    3	//开风扇
+#define  FANOFF	    4	//关风扇
+#define  BUZZON	    5	//开蜂鸣器
+#define  BUZZOFF    6	//关蜂鸣器
+
+typedef struct client_2_server
+{
+    int cmd;
+    int dev;
+    int ctl;
+    char name[SIZE];
+    char passwd[SIZE];
+}C2S;
+
+typedef struct server_2_client
+{
+    int tem;
+    int hum;
+    int light;
+    int loc_x;
+    int loc_y;
+    int loc_z;
+    char sure[10];
+    int pic_len;
+}S2C;
 
 //sql数据库
 static sqlite3 *account;    //数据库
@@ -12,28 +54,20 @@ static char **resultp;
 static int nrow, ncolumn;
 
 int fd;
-int success=0;	//操作标识符
-char cli_buf[CLICMD_BUF]="";
-
-typedef struct ACCOUNT	//注册表数据结构体
-{
-    char name[SIZE];    //用户名
-    char passwd[SIZE];  //密码
-}Account;
-Account accbuf;
+C2S cli_msg;	//接收cli数据
+S2C svr_msg;	//svr发出数据
+int cm_size = sizeof(C2S);
+int sm_size = sizeof(S2C);
 
 /*可交互接口*/
 //注册登录
 int signup();	//帐号注册
 int signin();	//帐号登录
 
-int fun_command();	//功能控制命令
-
 //客户端操作
-//void open_cam();    //打开摄像头
-//void close_cam();   //关闭摄像头
-void get_env_m0();	//获取m0环境参数
-void get_vdo_cam();	//获取cam视频
+//void open_cam();  //打开摄像头
+void get_env_m0();  //获取m0环境参数
+void get_vdo_cam(); //获取cam视频
 
 /*无交互接口*/
 
