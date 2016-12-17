@@ -26,6 +26,17 @@
 #define  BUZZON	    5	//开蜂鸣器
 #define  BUZZOFF    6	//关蜂鸣器
 
+//自动处理阈值
+#define TMPUPPERLIMIT	55
+#define TMPLOWERLIMIT	10
+
+#define HUMUPPERLIMIT	100
+#define HUMLOWERLIMIT	100
+
+#define LIGUPPERLIMIT	100
+#define LIGLOWERLIMIT	100
+
+
 typedef struct client_2_server
 {
     int cmd;
@@ -44,20 +55,17 @@ typedef struct server_2_client
     int loc_y;
     int loc_z;
     char sure[10];
-    int pic_len;
 }S2C;
 
 //sql数据库
-static sqlite3 *account;    //数据库
-static char *errmsg;	//sql错误信息
-static char **resultp;
-static int nrow, ncolumn;
+sqlite3 *account;    //数据库
+char *errmsg;	//sql错误信息
+char **resultp;
+int nrow, ncolumn;
 
 int fd;
 C2S cli_msg;	//接收cli数据
 S2C svr_msg;	//svr发出数据
-int cm_size = sizeof(C2S);
-int sm_size = sizeof(S2C);
 
 /*可交互接口*/
 //注册登录
@@ -65,9 +73,8 @@ int signup();	//帐号注册
 int signin();	//帐号登录
 
 //客户端操作
-//void open_cam();  //打开摄像头
 void get_env_m0();  //获取m0环境参数
-void get_vdo_cam(); //获取cam视频
+void get_vdo_cam(int *ifd); //获取cam视频
 
 /*无交互接口*/
 

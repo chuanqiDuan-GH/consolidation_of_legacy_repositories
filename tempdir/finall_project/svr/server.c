@@ -1,6 +1,7 @@
 #include "common.h"
 
 Display display;
+
 int main()
 {	
     struct sockaddr_in src,dest;

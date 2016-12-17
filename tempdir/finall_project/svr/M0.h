@@ -15,22 +15,22 @@
 
 typedef struct Display
 {
-        int tmp ;//温度
-        int hum ;//湿度
-        int lig ;//光照
-        int led ;
-        int fan ;
-        int buzz ;
+    int tmp ;//温度
+    int hum ;//湿度
+    int lig ;//光照
+    int led ;
+    int fan ;
+    int buzz ;
 }Display;//环境数据
 
 typedef struct fLags
 {
-        int f1;
-        int f2;
-        int f3;
-        int f4;
-        int f5;
-        int f6;
+    int f1;
+    int f2;
+    int f3;
+    int f4;
+    int f5;
+    int f6;
 }fLags;//判断数据是否过大
 
 fLags flags;

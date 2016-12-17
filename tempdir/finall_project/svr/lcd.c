@@ -36,12 +36,9 @@ typedef struct
 
 typedef struct  
 {  
-    // expected identifier or ‘(’ before ‘return’
-    //lcd3.c:213:1: error: expected identifier or ‘(’ before ‘}’ token
 unsigned char blue;  
 unsigned char green;  
 unsigned char red;  
-//    unsigned char reserved;  
 }__attribute__((packed)) PIXEL;//颜色模式RGB   
 
 BITMAPFILEHEADER FileHead;  
@@ -86,9 +83,9 @@ void *init_lcd(void *args)
 	exit(3);  
     }  
 
-    printf("R:%d,G:%d,B:%d \n", vinfo.red, vinfo.green, vinfo.blue );  
-    printf("%dx%d, %dbpp\n", vinfo.xres, vinfo.yres, vinfo.bits_per_pixel );  
-    printf("%dx%d\n",vinfo.yres_virtual,vinfo.yres_virtual);
+    //printf("R:%d,G:%d,B:%d \n", vinfo.red, vinfo.green, vinfo.blue );  
+    //printf("%dx%d, %dbpp\n", vinfo.xres, vinfo.yres, vinfo.bits_per_pixel );  
+    //printf("%dx%d\n",vinfo.yres_virtual,vinfo.yres_virtual);
 
     xres = vinfo.xres_virtual;  
     yres = vinfo.yres_virtual;  
@@ -99,7 +96,7 @@ void *init_lcd(void *args)
 
     //计算屏幕的总大小（字节）   
     screensize = vinfo.xres_virtual * vinfo.yres_virtual * vinfo.bits_per_pixel / 8;  
-    printf("screensize=%d byte\n",screensize);  
+    //printf("screensize=%d byte\n",screensize);  
 
     //对象映射   
     fbp = (char *)mmap(0, screensize, PROT_READ | PROT_WRITE, MAP_SHARED, fbfd, 0);  
@@ -113,26 +110,6 @@ void *init_lcd(void *args)
 
     printf("into show_bmp function\n");  
 
-    //显示图像   
-    //show_bmp();  
-    /*if((int)fbp==-1){
-      printf("error\n");
-      exit(4);
-      }   
-      memset(fbp,0,screensize); //清屏
-      char hz[16][2]={
-      0x08, 0x00, 0x08, 0x00, 0x08, 0x04, 0x7E, 0x84, 0x08, 0x48, 0x08, 0x28, 0xFF, 0x10, 0x08, 0x10,
-      0x28, 0x28, 0x2F, 0x28, 0x28, 0x44, 0x28, 0x84, 0x58, 0x00, 0x48, 0x00, 0x87, 0xFE, 0x00, 0x00,                                                                                  
-      }; //16*16字模库中提取的“赵”字对应的字符数组
-      int i,j,k;
-      for(j=0;j<16;j++){
-      for(i=0;i<2;i++){
-      for(k=0;k<8;k++){
-      if(hz[j][i]&(0x80>>k))
-     *((unsigned short *)(fbp + j*vinfo.xres*2 + i*16 + k*2))=0xf100;
-     }
-     }
-     }*/
     show_bmp();   
     //删除对象映射   
     munmap(fbp, screensize);  
@@ -155,7 +132,7 @@ int show_bmp()
 	sprintf(pic_path, "%s%d.bmp", path_header, pic_num%1);
 	pic_num++;
 
-	fp = fopen(pic_path, "rb" );  
+	fp = fopen(pic_path, "r" );  
 	if (fp == NULL)  
 	{  
 	    perror("open error:");
@@ -204,15 +181,12 @@ int show_bmp()
 	    *(fbp + location + 0)=pix.green;  
 	    *(fbp + location + 1)=pix.blue;  
 	    *(fbp + location + 2)=pix.red;  
-	    //    *(fbp + location + 3)=pix.reserved;  
 	    *(fbp + location + 3)=0xff;  
 
 	    line_x++;  
 	    if (line_x == InfoHead.ciWidth )  
 	    {  
 		line_x = 0;  
-		//x.blue;
-		//    bits_per_pixel = vinfo.bits_per_pixel;  
 		line_y++;  
 		if(line_y == InfoHead.ciHeight)  
 		    break;  

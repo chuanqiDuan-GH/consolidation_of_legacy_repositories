@@ -2,6 +2,8 @@
 #include "command.h"
 
 Display display;
+int cm_size = sizeof(C2S);
+int sm_size = sizeof(S2C);
 
 void cli_command(int *c_fd, int *m0_fd)
 {
@@ -28,7 +30,12 @@ void cli_command(int *c_fd, int *m0_fd)
     while(1)
     {	
 	printf("waiting for client command\n");
-	ret = recv(fd, &cli_msg, cm_size, 0);
+	printf("%d\n", cm_size);
+	printf("%d\n", sm_size);
+
+	bzero(&cli_msg, cm_size);
+	ret = read(fd, &cli_msg, cm_size);
+	//printf("name:%s passwd:%s", cli_msg.name, cli_msg.passwd);
 	if(ret<0)
 	{
 	    perror("recv command");
@@ -36,16 +43,17 @@ void cli_command(int *c_fd, int *m0_fd)
 	}
 	else if(cli_msg.cmd == SIGNUP)    //注册
 	{
+	    printf("SIGNUP\n");
 	    signup();
 	}
 	else if(cli_msg.cmd == SIGNIN)    //登录
 	{
+	    printf("SIGNIN\n");
 	    signin();
 	}
 	else if(cli_msg.cmd == GETCAM)
 	{
-	    //open_cam();
-	    continue;
+	    get_vdo_cam(&fd);
 	}
 	else if(cli_msg.cmd == GETENV)
 	{
@@ -92,23 +100,21 @@ void cli_command(int *c_fd, int *m0_fd)
 	}
     }
     close(fd);
-    pthread_exit(0);
 }
 
-//注册接口实现
 int signup()
 {	
     int ret = -1;
     char temp_buf[TEMP_SIZE] = "";
     bzero(svr_msg.sure, 10);
-    bzero(&cli_msg, cm_size);
 
     //查询数据
     bzero(temp_buf, sizeof(temp_buf));
-    printf("%s\n", cli_msg.name);
+    printf("%s %s\n", cli_msg.name, cli_msg.passwd);
     sprintf(temp_buf, "select * from account where name = '%s'", cli_msg.name);
     if(sqlite3_get_table(account, temp_buf, &resultp, &nrow, &ncolumn, &errmsg) != SQLITE_OK)
     {
+	printf("%d\n", __LINE__);
 	strcpy(svr_msg.sure, "registno");
 	send(fd, &svr_msg, sm_size, 0);
 	printf("%s\n", errmsg); 
@@ -119,6 +125,7 @@ int signup()
     {
 	if(nrow > 0)
 	{
+	    printf("%d\n", __LINE__);
 	    strcpy(svr_msg.sure, "registno");
 	    send(fd, &svr_msg, sm_size, 0);
 	    printf("%s\n", errmsg); 
@@ -127,7 +134,6 @@ int signup()
 	}
 	else 
 	{
-
 	    //插入数据    
 	    bzero(temp_buf,sizeof(temp_buf));
 	    sprintf(temp_buf,"insert into account(name,passwd) VALUES('%s', '%s')", cli_msg.name, cli_msg.passwd);
@@ -137,6 +143,7 @@ int signup()
 		sqlite3_close(account);
 		return -1;
 	    }
+	    printf("%d\n", __LINE__);
 	    strcpy(svr_msg.sure, "registyes");
 	    send(fd, &svr_msg, sm_size, 0);
 	    return 0;
@@ -146,19 +153,22 @@ int signup()
 
 int  signin()
 {
+    printf("into signin\n");
     int ret = -1;
     char temp_buf[TEMP_SIZE] = "";
     bzero(svr_msg.sure, 10);
-    bzero(&cli_msg, cm_size);
 
     //接受客户端传过来的用户登录信息
-    recv(fd,&cli_msg, cm_size, 0);
+    //recv(fd,&cli_msg, cm_size, 0);
 
+    printf("%s %s\n", cli_msg.name, cli_msg.passwd);
     bzero(temp_buf,sizeof(temp_buf));
     sprintf(temp_buf, "select * from account where name = '%s' and passwd = '%s'", cli_msg.name, cli_msg.passwd);
     if(sqlite3_get_table(account, temp_buf, &resultp, &nrow, &ncolumn, &errmsg) != SQLITE_OK)
     {
+	printf("");
 	strcpy(svr_msg.sure, "loginno");
+	printf("%d %s\n", __LINE__, svr_msg.sure);
 	send(fd, &svr_msg, sm_size, 0);
 	printf("%s\n", errmsg); 
 	sqlite3_close(account);
@@ -168,11 +178,13 @@ int  signin()
     {
 	if(nrow > 0)
 	{
+	    printf("signin success\n");
 	    strcpy(svr_msg.sure, "loginyes");
 	    send(fd, &svr_msg, sm_size, 0);
 	    return 0;
 	}
 	strcpy(svr_msg.sure, "loginno");
+	printf("%d %s\n", __LINE__, svr_msg.sure);
 	send(fd, &svr_msg, sm_size, 0);	
 	return -1;
     }
@@ -187,10 +199,32 @@ void get_env_m0()
     printf("%d", display.lig);
 }
 
-void get_vdo_cam()
+void get_vdo_cam(int *ifd)
 {
-    //to do
+#if 0
+    static int n=0;
+    char *bmp[]={"1.bmp","2.bmp","3.bmp"};
+    if(n>=3)
+    {
+	n=0;
+    }
+#endif
+    FILE * rd = fopen("/tmp/pict0.bmp","r");
+
+    int len;
+    char buf[BUF_SIZE]="";
+    while((len=fread(buf,1,sizeof(buf),rd))>0)
+    {
+	send(*ifd,buf,len,0);
+	if(len < sizeof(buf))
+	{
+	    fclose(rd);
+	    bzero(buf,sizeof(buf));
+	    break;
+	}	     
+    }
 }
+
 void *init_m0(void *args)
 {
     pthread_detach(pthread_self());
@@ -199,3 +233,36 @@ void *init_m0(void *args)
 
     pthread_exit(NULL);
 }
+
+//automatic processing mechanism自动处理机制
+#if 0
+void a_p_m()
+{
+    if(display.tmp > TMPUPPERLIMIT)
+    {
+	M0_ctrl(*m0_fd, BUZZON);
+    }
+    if(display.tmp > TMPLOWERLIMIT)
+    {
+	M0_ctrl(*m0_fd, BUZZON);
+    }
+
+    if(display.hum > HUMUPPERLIMIT)
+    {
+	M0_ctrl(*m0_fd, FANON);
+    }
+    if(display.hum > HUMLOWERLIMIT)
+    {
+	M0_ctrl(*m0_fd, FANOFF);
+    }
+
+    if(display.hum > LIGUPPERLIMIT)
+    {
+	M0_ctrl(*m0_fd, LEDOFF);
+    }
+    if(display.hum > LIGLOWERLIMIT)
+    {
+	M0_ctrl(*m0_fd, LEDON);
+    }
+}
+#endif
