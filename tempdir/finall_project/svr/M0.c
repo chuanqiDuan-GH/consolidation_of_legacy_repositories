@@ -1,20 +1,20 @@
 #include "M0.h"
 
-extern Display display;
+Display display;
 
 int M0_init()
 {
     int M0_fd;
-    //¿ªÉè±¸
+    //å¼€è®¾å¤‡
     M0_fd = open("/dev/ttyUSB0",O_RDWR | O_NOCTTY | O_NONBLOCK);
-    //O_NONBLOCKÉèÖÃÎª·Ç×èÈûÄ£Ê½£¬ÔÚreadÊ±²»»á×èÈû×¡£¬ÔÚ¶ÁµÄÊ±ºò½«read·ÅÔÚwhileÑ­»·ÖĞ£¬ÏÂÒ»½ÚÆªÎÄµµ½«ÏêÏ¸½²½â×èÈûºÍ·Ç×èÈû
+    //O_NONBLOCKè®¾ç½®ä¸ºéé˜»å¡æ¨¡å¼ï¼Œåœ¨readæ—¶ä¸ä¼šé˜»å¡ä½ï¼Œåœ¨è¯»çš„æ—¶å€™å°†readæ”¾åœ¨whileå¾ªç¯ä¸­ï¼Œä¸‹ä¸€èŠ‚ç¯‡æ–‡æ¡£å°†è¯¦ç»†è®²è§£é˜»å¡å’Œéé˜»å¡
     if(M0_fd == -1)
     {
 	//printf("M0 open error!\r\n");
 	return -1;
     }
     printf("open /dev/ttyUSB0 success!\r\n");
-    //ÉèÖÃ´®¿Ú
+    //è®¾ç½®ä¸²å£
     struct termios ser;
     if( tcgetattr( M0_fd,&ser) != 0)
     {    
@@ -23,20 +23,20 @@ int M0_init()
 	return -1;   
     }
     tcflush(M0_fd, TCIOFLUSH);
-    //ÉèÖÃ×Ö·û´óĞ¡
+    //è®¾ç½®å­—ç¬¦å¤§å°
     ser.c_cflag |= (CLOCAL | CREAD);    
     ser.c_cflag &= ~CSIZE;
-    //ÉèÖÃÍ£Ö¹Î»
+    //è®¾ç½®åœæ­¢ä½
     ser.c_cflag |= CS8;
-    //ÎŞÆæÅ¼Ğ£ÑéÎ»
+    //æ— å¥‡å¶æ ¡éªŒä½
     ser.c_cflag &= ~PARENB; 
     ser.c_iflag &= ~INPCK;
-    //ÉèÖÃ²¨ÌØÂÊ
+    //è®¾ç½®æ³¢ç‰¹ç‡
     cfsetispeed(&ser, B115200);   
     cfsetospeed(&ser, B115200);
-    //ÉèÖÃÍ£Ö¹Î»
+    //è®¾ç½®åœæ­¢ä½
     ser.c_cflag &= ~CSTOPB;
-    //ÉèÖÃµÈ´ıÊ±¼äºÍ×îĞ¡½ÓÊÕ×Ö·û
+    //è®¾ç½®ç­‰å¾…æ—¶é—´å’Œæœ€å°æ¥æ”¶å­—ç¬¦
     ser.c_cc[VTIME]  = 0; 
     ser.c_cc[VMIN] = 0;
 
@@ -46,7 +46,7 @@ int M0_init()
     ser.c_iflag &= ~(ICRNL | INLCR);     
     ser.c_iflag &= ~(IXON | IXOFF | IXANY);   
 
-    //´¦ÀíÎ´½ÓÊÕ×Ö·û
+    //å¤„ç†æœªæ¥æ”¶å­—ç¬¦
     tcflush(M0_fd,TCIFLUSH);
     if((tcsetattr(M0_fd,TCSANOW,&ser))!=0)
     {   
@@ -60,11 +60,32 @@ int M0_init()
 
 void M0_read(int M0_fd)
 {
+    printf("M0_read\n");
     unsigned char read_buf[BUF_SIZE] = {1};
     fLags flags;
     int readsize;
     int res;
     int count = 0, i;	
+    int shmid;
+
+    //åˆ›å»ºå…±äº«å†…å­˜                                               
+    //shmget                                                     
+    key_t key = ftok(FTOK_FILE, IPCKEY);                         
+    if(-1 == (shmid = shmget(key, SM_SIZE, OPEN_MODE|IPC_CREAT)))
+    {                                                            
+	printf("%s shmget failre!!!\n", __FILE__);               
+	return;                                               
+    }                                                            
+
+    //å»ºç«‹è¿›ç¨‹ä¸å…±äº«å†…å­˜çš„è”ç³»(æ˜ å°„)                           
+    //shmat                                                    
+    Display *shmaddr = NULL;                                      
+    if(NULL == (shmaddr = (Display *)shmat(shmid, NULL, 0)))
+    {                                                          
+	printf("%s shmmat failure!!!\n", __FILE__);            
+	return;                                             
+    }  
+
     while (1)
     {
 	sleep(1);
@@ -75,7 +96,7 @@ void M0_read(int M0_fd)
 	    //printf("readsize err\n");
 	    continue;
 	}
-	//printf("%d,%d",read_buf[0],read_buf[1]);
+
 	if(0xbb == read_buf[0] && 0x05 == read_buf[1])
 	{
 	    count = BUF_SIZE - 2;
@@ -86,40 +107,14 @@ void M0_read(int M0_fd)
 		count -= readsize;
 		i += readsize;
 	    }
-	    /*printf("readsize = %d\n\r",readsize);
-	      int i = 0;
-	      for(;i < readsize;i++)
-	      {			
-	      printf("%5d",read_buf[i]);
-	      }
-	     */
 
 	    display.tmp = read_buf[5];
 	    res = M0_flags(display.tmp, 18, 26, flags.f1);
 	    //	printf("tmp = %d\n\r", display.tmp);
-#if 0			
-	    if(res == 0)
-	    {
-		M0_ctrl(M0_fd, 1);
-		printf("tmp too low\r\n");						
-	    }
-	    if(res == 1)
-	    {
-		M0_ctrl(M0_fd, 2);
-		printf("led closed\r\n");								
-		M0_ctrl(M0_fd, 4);
-		printf("fan closed\r\n");
-	    }
-	    if(res == 2)
-	    {
-		M0_ctrl(M0_fd, 3);
-		printf("tmp too high\r\n");
-	    }
-#endif			
+	
 	    display.hum = read_buf[7];
 	    M0_flags(display.hum, 13, 18, flags.f2);
 	    //	printf("hmp = %d\n\r", display.hum);
-
 
 	    display.lig = read_buf[20];
 	    M0_flags(display.lig, 0, 0, flags.f3);
@@ -137,7 +132,10 @@ void M0_read(int M0_fd)
 	    M0_flags(display.buzz, 0, 0, flags.f6);
 	    //	printf("buzz = %d\n\r", display.buzz);
 
-	    printf("%d %d %d\n",display.tmp, display.hum, display.lig);
+	    //printf("%d-----%d %d %d\n", __LINE__, display.tmp, display.hum, display.lig);
+	    shmaddr->tmp = display.tmp;
+	    shmaddr->hum = display.hum;
+	    shmaddr->lig = display.lig;
 	    memset(read_buf, 0, sizeof(read_buf));
 	}
 	else
@@ -173,38 +171,38 @@ void M0_ctrl(int M0_fd, int ctrl)
     int res = 0;
     switch(ctrl)
     {
-	case 1:	//¿ªµÆ
+	case 1:	//å¼€ç¯
 	    //	printf("case 1\r\n");
 	    write_buf[4] = 0x00;
 	    res = write(M0_fd,write_buf,5);
 	    break;
-	case 2:	//¹ØµÆ
+	case 2:	//å…³ç¯
 	    //	printf("case 2\r\n");
 	    write_buf[4] = 0x01;
 	    res = write(M0_fd,write_buf,5);
 	    break;
-	case 3:	//¿ª·çÉÈ
+	case 3:	//å¼€é£æ‰‡
 	    //	printf("case 3\r\n");
 	    write_buf[4] = 0x04;
 	    res = write(M0_fd,write_buf,5);
 	    break;
-	case 4:	//¹Ø·çÉÈ
+	case 4:	//å…³é£æ‰‡
 	    //	printf("case 4\r\n");
 	    write_buf[4] = 0x08;
 	    res = write(M0_fd,write_buf,5);
 	    break;
-	case 5:	//¿ª·äÃùÆ÷
+	case 5:	//å¼€èœ‚é¸£å™¨
 	    //	printf("case 5\r\n");
 	    write_buf[4] = 0x02;
 	    res = write(M0_fd,write_buf,5);
 	    break;
-	case 6:	//¹Ø·äÃùÆ÷
+	case 6:	//å…³èœ‚é¸£å™¨
 	    //	printf("case 6\r\n");
 	    write_buf[4] = 0x03;
 	    res = write(M0_fd,write_buf,5);
 	    break;
 #if 0
-	case 7: //¹Ø»ú
+	case 7: //å…³æœº
 	    //	printf("case 7\r\n");
 	    write_buf[4] = 0x11;
 	    res = write(M0_fd,write_buf,5);

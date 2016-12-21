@@ -10,8 +10,15 @@
 #include <fcntl.h>
 #include <string.h>
 #include <error.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
 
 #define BUF_SIZE 36
+
+#define SM_SIZE 1024          
+#define OPEN_MODE 0777        
+#define IPCKEY 0x01           
+#define FTOK_FILE "./keyfile"
 
 typedef struct Display
 {
