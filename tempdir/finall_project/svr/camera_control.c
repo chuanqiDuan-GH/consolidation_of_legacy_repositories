@@ -8,10 +8,6 @@
 //函数参数：devname camera设备文件路径名，filename采集图片存储路径名
 //返回值  ：成功返回0，失败返回负值
 #include"camera.h"
-
-pthread_t camera_pthread=0;
-char path_buf[CAMERA_DEV_FILE_LENGTH]="";
-
 int init_cam(char *devname,char *filename)
 {
 	if(NULL == devname || NULL == filename)
@@ -31,11 +27,10 @@ int init_cam(char *devname,char *filename)
 		return -1;
 	}
 	return 0;
-}
 
+}
 int stop(void)
 {
-	printf("关闭线程pthread=%lu\n",camera_pthread);
 //	if(pthread_kill(camera_pthread,SIGCHLD))
 //	{
 //		return -1;

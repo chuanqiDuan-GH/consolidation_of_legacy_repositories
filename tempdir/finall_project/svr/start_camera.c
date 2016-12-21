@@ -4,8 +4,7 @@
   > Mail: huangyangwork@sina.com 
   > Created Time: 2016年12月09日 星期五 11时05分02秒
  ************************************************************************/
-#include"camera_pthread.h"
-
+#include"camera.h"
 void *start_camera(void *argv)
 {
     printf("start pthread\n");
@@ -25,17 +24,13 @@ void *start_camera(void *argv)
     {
 	log_exit("strtok argv");
     }
-    //	printf("devname :%s\n",devname);
-    //	printf("filename : %s\n",filename);
 
     fd = 0;
-    //	struct BUFFER *buf=NULL;
     picture_count =0;
     buf_count = 1;
     condition = 1;
     //停止信号处理监听
-    signal(SIGCHLD,stop_handler);
-    //	sleep(6);
+    //	signal(SIGCHLD,stop_handler);
     //初始化函数
     init_device(devname);
 
@@ -47,31 +42,33 @@ void *start_camera(void *argv)
     init_mmap();
     //加入缓冲队列
     add_queue();
+    //初始化信号量
+    init_sem();
     //开启视频采集
     start_capture();
     //定时信号处理
     //	signal(SIGALRM,loop_handler);
-    //	alarm(1);
     //	ualarm(1,RATE);
-
-    while(1)
+    while(condition)
     {
 	collect_data();
     }
-
-    while(1)
-    {
+    /*	while(1)
+	{
 	sleep(100);
-    }
-    printf("get data\n");
+	}   */
+    stop_capture();
+    close_device();
     return 0;
 }
+
 void log_exit(char *error)
 {
     fprintf(camera_log_error,"%s error:%s\n",error,strerror(errno));
     close(fd);
     pthread_exit(NULL);
 }
+
 void ckioctl(int fd,int macro,void *st)
 {
     if(ioctl(fd,macro,st))
@@ -87,7 +84,6 @@ int init_device(char *devname)
 {
     //打开设备
     open_device(devname);
-    printf("fd = %d\n",fd);
     //检查设备能力
     query_cap();
     //设置图片大小
@@ -130,7 +126,6 @@ void set_size(void )
     format.fmt.pix.width=IMAGE_WIDTH;
     format.fmt.pix.height=IMAGE_HEIGHT;
     format.fmt.pix.pixelformat=V4L2_PIX_FMT_YUYV;
-    //	format.fmt.pix.field=V4L2_FIELD_INTERLACED;
     format.fmt.pix.field=V4L2_FIELD_NONE;
     ckioctl(fd,VIDIOC_S_FMT,&format);
 }
@@ -154,7 +149,6 @@ void request_queue(void)
 //初始化缓存映射保存区
 void init_buf(struct BUFFER **buf)
 {
-    printf("buf_count:%d\n",buf_count);
     *buf = calloc(buf_count,sizeof(struct BUFFER));
     if(NULL ==  buf)
     {
@@ -191,6 +185,7 @@ void init_mmap(void)
     }
 }
 
+//添加队列
 void add_queue(void)
 {
     struct v4l2_buffer addbuf;
@@ -205,6 +200,7 @@ void add_queue(void)
     }
 }
 
+//开始采集视频
 void start_capture(void)
 {
     enum v4l2_buf_type type;
@@ -222,60 +218,55 @@ void collect_data(void)
     struct timeval tv;
     tv.tv_sec = 5;
     tv.tv_usec = 0;
-    int ret = select(fd+1,&set,NULL,NULL,NULL);
-    //printf("file:%s,func:%s,line:%d\n",__FILE__,__func__,__LINE__);
+    int ret = select(fd+1,&set,NULL,NULL,&tv);
     if(ret <= 0)
     {
-	printf("select ret =%d,errno:%d\n",ret,errno);
-	log_exit("select");
+	fprintf(camera_log_error,"select ret =%d,errno:%d\n",ret,errno);
+	start_capture();
+	stop_capture();
+	return ;
     }
+
     //获取采集满的缓冲区
     bzero(&getdata,sizeof(getdata));
     getdata.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
     getdata.memory = V4L2_MEMORY_MMAP;
-    //printf("line:%d, fd = %d\n",__LINE__,fd);
-    //	ckioctl(fd,VIDIOC_DQBUF,&getdata);	
     ret = ioctl(fd,VIDIOC_DQBUF,&getdata);
     if(ret <0)
     {
-	printf("DQBUF:ret =%d,%s\n",ret,strerror(errno));
-	//	pthread_exit(NULL);
+	fprintf(camera_log_error,"DQBUF:ret =%d,%s\n",ret,strerror(errno));
+	start_capture();
+	stop_capture();
+	return ;
     }
-    //printf("VIDIOC_DQBUF:%X\n",VIDIOC_DQBUF);
     //保存文件名设置
     char filepath[256]="";
     sprintf(filepath,"%s%d.bmp",filename,picture_count%1);
-    //printf("filepath:%s\n",filepath);
     picture_count++;
     //保存数据
 
     int fs = open(filepath,O_RDWR | O_CREAT,0666);
-    //	int fs = open("hy",O_RDWR | O_CREAT,0666);
     if(fs< 0)
     {
 	log_exit("open Storage file");
     }
-    /*	ret = write (fs,buf[getdata.index].start,buf[getdata.index].length);
-	if(ret < 0)
-	{
-	log_exit("write storage file");
-	}  */
     bzero(bufdata,bufdata_length);
     gbpos =0;
     add_bmphead(fs);
+    //申请访问bufdata
+    sem_wait(&sem_camera);
     yuyv2rgb(getdata.index);
     ret = write(fs,bufdata,bufdata_length);
+    //释放lcd访问信号量
+    sem_post(&sem_lcd);
     close(fs);
-
     //将缓冲区才添加回等待队列
-
     struct 	v4l2_buffer addbuf;
     bzero(&addbuf,sizeof(addbuf));
     addbuf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
     addbuf.memory = V4L2_MEMORY_MMAP;
     addbuf.index = getdata.index;
     ckioctl(fd,VIDIOC_QBUF,&addbuf);
-    //	printf("VIDICO_QBUF:%x\n",VIDIOC_QBUF);
 }
 
 //停止视频数据采集
@@ -283,7 +274,6 @@ void stop_capture(void)
 {
     enum v4l2_buf_type type;
     type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-    printf("line:%d, fd = %d\n",__LINE__,fd);
     ckioctl(fd,VIDIOC_STREAMOFF,&type);
 }
 
@@ -304,23 +294,19 @@ void loop_handler(int signum)
     {
 	//获得图片
 	collect_data();
-	//设置定时器
-	//		alarm(1);
     }	
     else
     {
 	ualarm(1,0);
-	printf("VIDIOC_STREAMOFF:%x\n",VIDIOC_STREAMOFF);
 	stop_capture();
 	close_device();
-	printf("camera pthread over\n");
 	pthread_exit(NULL);
     }
 }
 
+//停止时信号处理函数
 void stop_handler(int signum)
 {
-    printf("get stop signal\n");
     condition = 0;
 }
 
@@ -423,8 +409,23 @@ void input_rgb(unsigned char y,unsigned char u,unsigned char v)
     outbuf[1] = g;
     outbuf[2] = r;
     unsigned int position =0;
-    position = (IMAGE_HEIGHT - gbpos/(IMAGE_WIDTH*3))*IMAGE_WIDTH*3 + gbpos%(IMAGE_WIDTH*3);
-    //	position = (IMAGE_WIDTH - gbpos/(IMAGE_HEIGHT*3))*IMAGE_HEIGHT*3 - gbpos%(IMAGE_HEIGHT*3);
+    position = (IMAGE_HEIGHT -1 - gbpos/(IMAGE_WIDTH*3))*IMAGE_WIDTH*3 + gbpos%(IMAGE_WIDTH*3);
     bcopy(outbuf,bufdata+position,3);
     gbpos +=3;
+}
+
+//初始化信号量
+int init_sem(void)
+{
+    if(sem_init(&sem_camera,0,1))
+    {
+	fprintf(camera_log_error,"init sem_camera\n");
+	log_exit("init sem_camera\n");
+    }
+    if(sem_init(&sem_lcd,0,0))
+    {
+	fprintf(camera_log_error,"init sem_lcd\n");
+	log_exit("init sem_lcd\n");
+    }
+    return 0;
 }
