@@ -1,9 +1,9 @@
 #ifndef __COMMAND_H__
 #define __COMMAND_H__
 
-#define CLICMD_BUF 256
-#define TEMP_SIZE 256
-#define SIZE 16
+#define SQLCMD_SIZE 256	//数据库命令
+#define ACCMSG_SIZE 10	//账户信息(用户名密码)
+#define VDOPIC_SIZE 204800  //客户端视频传递
 
 //用户操作码
 #define GETENV	1   //获取环境参数
@@ -27,25 +27,26 @@
 #define  BUZZOFF    6	//关蜂鸣器
 
 //自动处理阈值
-#define TMPUPPERLIMIT	55
-#define TMPLOWERLIMIT	10
+#define TMPUPPERLIMIT	55  //温度上限值
+#define TMPLOWERLIMIT	10  //温度下限值
 
-#define HUMUPPERLIMIT	100
-#define HUMLOWERLIMIT	100
+#define HUMUPPERLIMIT	100 //湿度上限值
+#define HUMLOWERLIMIT	100 //湿度下限值
 
-#define LIGUPPERLIMIT	100
-#define LIGLOWERLIMIT	100
+#define LIGUPPERLIMIT	100 //亮度上限值
+#define LIGLOWERLIMIT	100 //亮度下限值
 
-
+//接收客户端数据
 typedef struct client_2_server
 {
     int cmd;
     int dev;
     int ctl;
-    char name[SIZE];
-    char passwd[SIZE];
+    char name[ACCMSG_SIZE];
+    char passwd[ACCMSG_SIZE];
 }C2S;
 
+//发送给客户端数据
 typedef struct server_2_client
 {
     int tem;
@@ -63,19 +64,16 @@ char *errmsg;	//sql错误信息
 char **resultp;
 int nrow, ncolumn;
 
-int fd;
+//int fd;
 C2S cli_msg;	//接收cli数据
 S2C svr_msg;	//svr发出数据
 
-/*可交互接口*/
 //注册登录
 int signup();	//帐号注册
 int signin();	//帐号登录
 
 //客户端操作
-void get_env_m0();  //获取m0环境参数
-void get_vdo_cam(int *ifd); //获取cam视频
-
-/*无交互接口*/
+void get_env_m0(int e_fd, Display display);  //获取m0环境参数
+void get_vdo_cam(int v_fd); //获取cam视频
 
 #endif	//__COMMAND_H__

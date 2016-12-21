@@ -12,8 +12,9 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <dirent.h>
-#include "camera_pthread.h"
 #include <sqlite3.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
 #include "camera.h"
 #include "M0.h"
 
@@ -27,5 +28,8 @@ void *init_lcd(void *args);//初始化lcd
 
 //m0
 void *init_m0(void *args);//初始化m0
+
+//apm
+void *init_apm(void *args);//初始化m0
 
 #endif	//__COMMON_H__
