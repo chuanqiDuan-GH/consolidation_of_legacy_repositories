@@ -50,7 +50,7 @@ int main()
     init_cam("/dev/video0", "/tmp/pict");   //初始化并拉起摄像头
     pthread_create(&th_m0, NULL, init_m0, (void *)&m0_fd);  //拉起m0
     pthread_create(&th_lcd, NULL, init_lcd, NULL);    //初始化并拉起显示屏
-    pthread_create(&th_apm, NULL, init_apm, (void *)&m0_fd);	//拉起自动处理系统
+    //pthread_create(&th_apm, NULL, init_apm, (void *)&m0_fd);	//拉起自动处理系统
                                                         
     while(1)
     {

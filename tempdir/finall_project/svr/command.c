@@ -30,7 +30,7 @@ void cli_command(int *c_fd, int *m0_fd)
     int shmid;
     Display *shmaddr = NULL;
     int key = ftok(FTOK_FILE, IPCKEY);
-    printf("%d-----%d\n", __LINE__, key);                                         
+    //printf("%d-----%d\n", __LINE__, key);                                         
     if(-1 == (shmid = shmget(key, SM_SIZE, OPEN_MODE|IPC_EXCL)))
     {
 	printf("%s shmget failre!!!\n", __FILE__); 
@@ -59,22 +59,22 @@ void cli_command(int *c_fd, int *m0_fd)
 	}
 	else if(cli_msg.cmd == SIGNUP)    //注册
 	{
-	    printf("SIGNUP\n");
+	    //printf("SIGNUP\n");
 	    signup();
 	}
 	else if(cli_msg.cmd == SIGNIN)    //登录
 	{
-	    printf("SIGNIN\n");
+	    //printf("SIGNIN\n");
 	    signin();
 	}
 	else if(cli_msg.cmd == GETCAM)	//客户端查看视频
 	{
-	    printf("GETCAM\n");
+	    //printf("GETCAM\n");
 	    get_vdo_cam(fd);
 	}
 	else if(cli_msg.cmd == GETENV)	//给客户端发送环境箱内系
 	{
-	    printf("GETENV\n");
+	    //printf("GETENV\n");
 	    get_env_m0(fd, *shmaddr);
 	}
 	else if((cli_msg.cmd == CTRLM0) && (cli_msg.dev == LED))    //LED灯控制
@@ -118,6 +118,8 @@ void cli_command(int *c_fd, int *m0_fd)
 	}
     }
     close(fd);
+    //删除共享内存
+    shmctl(shmid, IPC_RMID, NULL);
 }
 
 int signup()
@@ -128,7 +130,7 @@ int signup()
 
     //查询数据
     bzero(temp_buf, sizeof(temp_buf));
-    printf("%s %s\n", cli_msg.name, cli_msg.passwd);
+    //printf("%s %s\n", cli_msg.name, cli_msg.passwd);
     sprintf(temp_buf, "select * from account where name = '%s'", cli_msg.name);
     if(sqlite3_get_table(account, temp_buf, &resultp, &nrow, &ncolumn, &errmsg) != SQLITE_OK)
     {
@@ -168,7 +170,7 @@ int signup()
 
 int  signin()
 {
-    printf("into signin\n");
+    //printf("into signin\n");
     int ret = -1;
     char temp_buf[SQLCMD_SIZE] = "";
     bzero(svr_msg.sure, 10);
@@ -178,7 +180,6 @@ int  signin()
     sprintf(temp_buf, "select * from account where name = '%s' and passwd = '%s'", cli_msg.name, cli_msg.passwd);
     if(sqlite3_get_table(account, temp_buf, &resultp, &nrow, &ncolumn, &errmsg) != SQLITE_OK)
     {
-	printf("");
 	strcpy(svr_msg.sure, "loginno");
 	send(fd, &svr_msg, sm_size, 0);
 	printf("%s\n", errmsg); 
@@ -204,7 +205,7 @@ int  signin()
 
 void get_env_m0(int e_fd, Display display)
 {
-    printf("%d-----%d %d %d\n", __LINE__,  display.tmp, display.hum, display.lig);
+    //printf("%d-----%d %d %d\n", __LINE__,  display.tmp, display.hum, display.lig);
     bzero(svr_msg.sure, 10);
     svr_msg.tem = display.tmp;
     svr_msg.hum = display.hum;
@@ -227,11 +228,11 @@ void get_vdo_cam(int v_fd)
     char buf[VDOPIC_SIZE]="";
     while((len=fread(buf, 1, VDOPIC_SIZE, rd))>0)
     {
-	printf("len:%d buf:%d\n", len, sizeof(buf));
+	//printf("len:%d buf:%d\n", len, sizeof(buf));
 	send(v_fd,buf,len,0);
 	if(len < sizeof(buf))
 	{
-	    printf("%d\n", __LINE__);
+	    //printf("%d\n", __LINE__);
 	    fclose(rd);
 	    bzero(buf,sizeof(buf));
 	    break;
@@ -241,7 +242,7 @@ void get_vdo_cam(int v_fd)
 
 void *init_m0(void *args)
 {
-    printf("%d\n", __LINE__);
+    //printf("%d\n", __LINE__);
     pthread_detach(pthread_self());
     int m0_fd = *(int *)args;
     M0_read(m0_fd);
@@ -286,7 +287,6 @@ void *init_apm(void *args)
 	    M0_ctrl(m0_fd, LEDON);
 	}
     }
-
     pthread_exit(NULL);
 }
 #endif
