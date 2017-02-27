@@ -7,7 +7,7 @@ int main()
     int transform[20] = {0};
     int count = 0;
     scanf("%d", &input);
-    
+
     while((input/2) != 0)
     {
 	//printf("%d ", transform[count]); 
@@ -16,7 +16,7 @@ int main()
     }
     transform[count] = 1; 
     //printf("%d ", transform[count]); 
-    
+
     do
     {
 	printf("%d ", transform[count]); 
