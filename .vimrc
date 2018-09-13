@@ -108,8 +108,7 @@ set tags=tags
  "add new tags file(刚刚生成tags的路径，在ctags -R 生成tags文件后，不要将tags移动到别的目录>，否则ctrl+］时，会提示找不到源码文件)
 set tags+=./tagsset tags+=/mnt/hgfs/cqd/linux_header/tags tags+=/home/farsight/uboot2013/u-boot-2013.01/tags tags+=/home/farsight/linux-3.14/linux-3.14 tags+=/home/farsight/linux-3.14/linux-3.14
 
-"tags表示在搜寻tags文件的时候，也要搜寻/mnt/hgfs/cqd/linux_header/文件夹下的tags文件。然后保
-存并退出vi。这样，你就可以用vim在任意地方查看有关Linux的函数原形
+"tags表示在搜寻tags文件的时候，也要搜寻/mnt/hgfs/cqd/linux_header/文件夹下的tags文件。然后保存并退出vi。这样，你就可以用vim在任意地方查看有关Linux的函数原形
 set tags+=/mnt/hgfs/cqd/linux_header/tags
 
 
