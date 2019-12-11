@@ -7,6 +7,9 @@
 "----------------------------------------------
 " < 基本设置 >
 "----------------------------------------------
+"tab换成空格  
+set expandtab
+
 "(自动)缩进使用4个空格
 set shiftwidth=4
 
@@ -253,7 +256,7 @@ func SetComment()
     call append(line(".")+1, "*   ")
     call append(line(".")+2, "*   Filename:".expand("%:t"))
     call append(line(".")+3, "*   Author  :Chuanqi.Duan")
-    call append(line(".")+4, "*   Email   :chuanqiDuan@foxmail.com")
+    call append(line(".")+4, "*   Email   :chuanqiduan@foxmail.com")
     call append(line(".")+5, "*   Date    :".strftime("%Y-%m-%d %H:%M"))
     call append(line(".")+6, "*   Describe:")
     call append(line(".")+7, "********************************************************/")
